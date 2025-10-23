@@ -2,19 +2,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Users, MessageCircle } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
-
 const Landing = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div 
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: `linear-gradient(rgba(10, 10, 15, 0.85), rgba(10, 10, 15, 0.85)), url(${heroBg})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{
+      backgroundImage: `linear-gradient(rgba(10, 10, 15, 0.85), rgba(10, 10, 15, 0.85)), url(${heroBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center'
+    }}>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
         
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
@@ -35,9 +30,7 @@ const Landing = () => {
                 Get Started
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              Learn More
-            </Button>
+            
           </div>
         </div>
       </div>
@@ -161,8 +154,6 @@ const Landing = () => {
           </Link>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
