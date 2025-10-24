@@ -2,21 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Ghost as GhostIcon, Save } from "lucide-react";
+import { Settings, Sparkles, Ghost as GhostIcon, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import MobileNav from "@/components/MobileNav";
 import type { Database } from "@/integrations/supabase/types";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
-  const [username, setUsername] = useState("");
-  const [bio, setBio] = useState("");
+  const [postsCount, setPostsCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     loadProfile();
@@ -37,30 +33,27 @@ const Profile = () => {
 
     if (data) {
       setProfile(data);
-      setUsername(data.username);
-      setBio(data.bio || "");
-    }
-  };
-
-  const handleSave = async () => {
-    if (!profile) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          username,
-          bio,
-        })
-        .eq("id", profile.id);
-
-      if (error) throw error;
-      toast.success("Profile updated!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update profile");
-    } finally {
-      setLoading(false);
+      
+      // Load posts count
+      const { count: posts } = await supabase
+        .from("posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", data.id);
+      setPostsCount(posts || 0);
+      
+      // Load followers count
+      const { count: followers } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", data.id);
+      setFollowersCount(followers || 0);
+      
+      // Load following count
+      const { count: following } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", data.id);
+      setFollowingCount(following || 0);
     }
   };
 
@@ -73,104 +66,89 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="glass-card border-b border-border/50 backdrop-blur-xl safe-area-top">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/feed")}
-            className="md:flex"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-xl md:text-2xl font-bold">Profile</h1>
-        </div>
+      <header className="safe-area-top px-4 py-4 flex items-center justify-end">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => toast.info("Settings coming soon")}
+          className="rounded-full"
+        >
+          <Settings className="w-6 h-6" />
+        </Button>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <Card className="glass-card border-border/50">
-          <CardHeader className="px-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center ${
-                profile.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"
-              }`}>
-                {profile.account_type === "regulus" ? (
-                  <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
-                ) : (
-                  <GhostIcon className="w-6 h-6 md:w-8 md:h-8" />
-                )}
-              </div>
-              <div>
-                <CardTitle className="text-xl md:text-2xl">{profile.username}</CardTitle>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-xs md:text-sm px-2 py-1 rounded-full ${
-                    profile.account_type === "regulus"
-                      ? "bg-primary/20 text-primary"
-                      : "bg-secondary/20 text-secondary"
-                  }`}>
-                    {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
-                  </span>
-                  {profile.ghost_type && (
-                    <span className="text-xs md:text-sm text-muted-foreground">
-                      {profile.ghost_type === "observer" && "👁️ Observer"}
-                      {profile.ghost_type === "ghost" && "🌪️ Ghost"}
-                      {profile.ghost_type === "echo" && "🔊 Echo"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6 px-4 md:px-6">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Your username"
-              />
-            </div>
+      {/* Profile Content */}
+      <main className="px-4 pb-6">
+        {/* Profile Picture */}
+        <div className="flex justify-center mb-4">
+          <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 border-border ${
+            profile.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"
+          }`}>
+            {profile.account_type === "regulus" ? (
+              <Sparkles className="w-16 h-16" />
+            ) : (
+              <GhostIcon className="w-16 h-16" />
+            )}
+          </div>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us about yourself..."
-                rows={4}
-              />
-            </div>
+        {/* Username */}
+        <h1 className="text-2xl font-bold text-center mb-2">{profile.username}</h1>
+        
+        {/* Bio */}
+        <p className="text-sm text-muted-foreground text-center mb-1">
+          {profile.bio || "JUST BEING REAL"}
+        </p>
+        
+        {/* Location/Account Type */}
+        <p className="text-xs text-muted-foreground text-center mb-6">
+          {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
+        </p>
 
-            <div className="pt-4">
-              <Button
-                onClick={handleSave}
-                disabled={loading}
-                className="w-full"
-                variant={profile.account_type === "regulus" ? "regulus" : "ghostmode"}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
+        {/* Stats */}
+        <div className="flex justify-center gap-12 mb-6">
+          <div className="text-center">
+            <div className="text-2xl font-bold">{postsCount}</div>
+            <div className="text-xs text-muted-foreground">BeReals</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">{followersCount}</div>
+            <div className="text-xs text-muted-foreground">Friends</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">{followingCount}</div>
+            <div className="text-xs text-muted-foreground">Following</div>
+          </div>
+        </div>
 
-            <div className="pt-6 border-t border-border">
-              <h3 className="font-semibold mb-4">Account Type</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {profile.account_type === "regulus"
-                  ? "Your Regulus account is visible to everyone. Others can follow you and see your posts."
-                  : "Your GhostMode account is private. You can follow others and interact, but your profile stays hidden."}
-              </p>
-              <div className="p-3 md:p-4 rounded-lg bg-muted/50 text-xs md:text-sm">
-                💡 Account type cannot be changed after signup. Create a new account to switch between Regulus and GhostMode.
-              </div>
+        {/* Share Profile Button */}
+        <Button 
+          className="w-full rounded-2xl h-12 mb-6"
+          variant="outline"
+          onClick={() => toast.info("Share profile coming soon")}
+        >
+          <QrCode className="w-4 h-4 mr-2" />
+          Share Profile
+        </Button>
+
+        {/* Privacy Notice */}
+        <p className="text-xs text-center text-muted-foreground mb-6">
+          Your BeReals are private and ephemeral unless marked with 🌍
+        </p>
+
+        {/* Posts Grid */}
+        <div className="grid grid-cols-3 gap-1">
+          {[...Array(9)].map((_, i) => (
+            <div 
+              key={i}
+              className="aspect-[3/4] bg-muted rounded-lg flex items-center justify-center"
+            >
+              <span className="text-4xl opacity-20">📸</span>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       </main>
 
       <MobileNav />
