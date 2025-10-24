@@ -91,17 +91,17 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-b from-background to-card/50">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-6 bg-gradient-to-b from-background to-card/50 safe-area-top safe-area-bottom">
       <Card className="w-full max-w-md glass-card border-border/50">
-        <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-bold text-glow-regulus mb-2">
+        <CardHeader className="text-center px-4 md:px-6">
+          <CardTitle className="text-3xl md:text-4xl font-bold text-glow-regulus mb-2">
             Regulargram
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-sm md:text-base">
             Be real. Stay silent. Or shine as Regulus.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 md:px-6">
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -187,28 +187,28 @@ const Auth = () => {
                 </div>
 
                 <div className="space-y-3 pt-2">
-                  <Label>Account Type</Label>
+                  <Label className="text-sm md:text-base">Account Type</Label>
                   <RadioGroup
                     value={accountType}
                     onValueChange={(value) => setAccountType(value as "regulus" | "ghost")}
                     disabled={loading}
                   >
-                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-card/50 transition-colors">
+                    <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 rounded-lg border border-border hover:bg-card/50 transition-colors">
                       <RadioGroupItem value="regulus" id="regulus" />
                       <Label htmlFor="regulus" className="flex items-center gap-2 cursor-pointer flex-1">
                         <Sparkles className="w-4 h-4 text-primary" />
                         <div>
-                          <div className="font-semibold">Regulus</div>
+                          <div className="text-sm md:text-base font-semibold">Regulus</div>
                           <div className="text-xs text-muted-foreground">Visible & followable</div>
                         </div>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-card/50 transition-colors">
+                    <div className="flex items-center space-x-2 md:space-x-3 p-2 md:p-3 rounded-lg border border-border hover:bg-card/50 transition-colors">
                       <RadioGroupItem value="ghost" id="ghost" />
                       <Label htmlFor="ghost" className="flex items-center gap-2 cursor-pointer flex-1">
                         <Ghost className="w-4 h-4 text-secondary" />
                         <div>
-                          <div className="font-semibold">GhostMode</div>
+                          <div className="text-sm md:text-base font-semibold">GhostMode</div>
                           <div className="text-xs text-muted-foreground">Private & silent</div>
                         </div>
                       </Label>
@@ -218,27 +218,27 @@ const Auth = () => {
 
                 {accountType === "ghost" && (
                   <div className="space-y-3">
-                    <Label>Ghost Identity</Label>
+                    <Label className="text-sm md:text-base">Ghost Identity</Label>
                     <RadioGroup
                       value={ghostType}
                       onValueChange={(value) => setGhostType(value as "observer" | "ghost" | "echo")}
                       disabled={loading}
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-2 rounded-lg border border-border hover:bg-card/50 transition-colors">
                         <RadioGroupItem value="observer" id="observer" />
-                        <Label htmlFor="observer" className="cursor-pointer">
+                        <Label htmlFor="observer" className="cursor-pointer text-sm md:text-base flex-1">
                           👁️ Observer — Watch quietly
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-2 rounded-lg border border-border hover:bg-card/50 transition-colors">
                         <RadioGroupItem value="ghost" id="ghost-type" />
-                        <Label htmlFor="ghost-type" className="cursor-pointer">
+                        <Label htmlFor="ghost-type" className="cursor-pointer text-sm md:text-base flex-1">
                           🌪️ Ghost — React invisibly
                         </Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-2 rounded-lg border border-border hover:bg-card/50 transition-colors">
                         <RadioGroupItem value="echo" id="echo" />
-                        <Label htmlFor="echo" className="cursor-pointer">
+                        <Label htmlFor="echo" className="cursor-pointer text-sm md:text-base flex-1">
                           🔊 Echo — Comment anonymously
                         </Label>
                       </div>

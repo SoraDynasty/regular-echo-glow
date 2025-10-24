@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Sparkles, Ghost as GhostIcon, Save } from "lucide-react";
 import { toast } from "sonner";
+import MobileNav from "@/components/MobileNav";
 import type { Database } from "@/integrations/supabase/types";
 
 const Profile = () => {
@@ -72,39 +73,40 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       {/* Header */}
-      <header className="glass-card border-b border-border/50 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center gap-4">
+      <header className="glass-card border-b border-border/50 backdrop-blur-xl safe-area-top">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/feed")}
+            className="md:flex"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Profile</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Profile</h1>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="max-w-2xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <Card className="glass-card border-border/50">
-          <CardHeader>
+          <CardHeader className="px-4 md:px-6">
             <div className="flex items-center gap-3">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center ${
                 profile.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"
               }`}>
                 {profile.account_type === "regulus" ? (
-                  <Sparkles className="w-8 h-8" />
+                  <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
                 ) : (
-                  <GhostIcon className="w-8 h-8" />
+                  <GhostIcon className="w-6 h-6 md:w-8 md:h-8" />
                 )}
               </div>
               <div>
-                <CardTitle className="text-2xl">{profile.username}</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">{profile.username}</CardTitle>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-sm px-2 py-1 rounded-full ${
+                  <span className={`text-xs md:text-sm px-2 py-1 rounded-full ${
                     profile.account_type === "regulus"
                       ? "bg-primary/20 text-primary"
                       : "bg-secondary/20 text-secondary"
@@ -112,7 +114,7 @@ const Profile = () => {
                     {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
                   </span>
                   {profile.ghost_type && (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs md:text-sm text-muted-foreground">
                       {profile.ghost_type === "observer" && "👁️ Observer"}
                       {profile.ghost_type === "ghost" && "🌪️ Ghost"}
                       {profile.ghost_type === "echo" && "🔊 Echo"}
@@ -122,7 +124,7 @@ const Profile = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 px-4 md:px-6">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -163,13 +165,15 @@ const Profile = () => {
                   ? "Your Regulus account is visible to everyone. Others can follow you and see your posts."
                   : "Your GhostMode account is private. You can follow others and interact, but your profile stays hidden."}
               </p>
-              <div className="p-4 rounded-lg bg-muted/50 text-sm">
+              <div className="p-3 md:p-4 rounded-lg bg-muted/50 text-xs md:text-sm">
                 💡 Account type cannot be changed after signup. Create a new account to switch between Regulus and GhostMode.
               </div>
             </div>
           </CardContent>
         </Card>
       </main>
+
+      <MobileNav />
     </div>
   );
 };

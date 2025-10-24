@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon } from "lucide-react";
+import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 import PostCard from "@/components/PostCard";
+import MobileNav from "@/components/MobileNav";
+import { useTheme } from "@/hooks/use-theme";
+import { useSwipe } from "@/hooks/use-swipe";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -14,9 +17,15 @@ type Post = Database["public"]["Tables"]["posts"]["Row"] & {
 
 const Feed = () => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
+
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: () => navigate("/profile"),
+    onSwipeRight: () => {}, // Can add more swipe actions
+  });
 
   useEffect(() => {
     checkAuth();
@@ -68,21 +77,25 @@ const Feed = () => {
     navigate("/");
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0" {...swipeHandlers}>
       {/* Header */}
-      <header className="sticky top-0 z-50 glass-card border-b border-border/50 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-glow-regulus">Regulargram</h1>
+      <header className="sticky top-0 z-50 glass-card border-b border-border/50 backdrop-blur-xl safe-area-top">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+          <h1 className="text-xl md:text-2xl font-bold text-glow-regulus">Regulargram</h1>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {profile?.account_type === "regulus" ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 text-sm">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 text-sm">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <span className="font-medium">Regulus</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/20 text-sm">
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/20 text-sm">
                 <GhostIcon className="w-4 h-4 text-secondary" />
                 <span className="font-medium">Ghost</span>
               </div>
@@ -91,7 +104,17 @@ const Feed = () => {
             <Button
               variant="ghost"
               size="icon"
+              onClick={toggleTheme}
+              className="hidden md:flex"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => navigate("/profile")}
+              className="hidden md:flex"
             >
               <User className="w-5 h-5" />
             </Button>
@@ -100,6 +123,7 @@ const Feed = () => {
               variant="ghost"
               size="icon"
               onClick={handleSignOut}
+              className="hidden md:flex"
             >
               <LogOut className="w-5 h-5" />
             </Button>
@@ -108,9 +132,9 @@ const Feed = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        {/* Create Post Button */}
-        <div className="mb-8 text-center">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        {/* Create Post Button - Hidden on mobile, shown on desktop */}
+        <div className="mb-6 md:mb-8 text-center hidden md:block">
           <Button
             size="lg"
             variant={profile?.account_type === "regulus" ? "regulus" : "ghostmode"}
@@ -132,21 +156,23 @@ const Feed = () => {
             <p className="text-muted-foreground mt-4">Loading feed...</p>
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 glass-card rounded-2xl">
-            <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
-            <p className="text-muted-foreground">
+          <div className="text-center py-12 glass-card rounded-2xl p-6">
+            <Camera className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg md:text-xl font-semibold mb-2">No posts yet</h3>
+            <p className="text-sm md:text-base text-muted-foreground">
               Be the first to share your authentic moment!
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} onReaction={loadFeed} />
             ))}
           </div>
         )}
       </main>
+
+      <MobileNav />
     </div>
   );
 };

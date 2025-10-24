@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Eye, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { haptics } from "@/lib/haptics";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -20,6 +21,7 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
   const [reacting, setReacting] = useState(false);
 
   const handleReaction = async (reactionType: string) => {
+    haptics.light();
     setReacting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -43,10 +45,12 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
           user_id: session.user.id,
           reaction_type: reactionType,
         });
+        haptics.success();
       }
 
       onReaction();
     } catch (error: any) {
+      haptics.error();
       toast.error("Failed to react");
     } finally {
       setReacting(false);
@@ -80,15 +84,15 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
   return (
     <Card className="glass-card border-border/50 overflow-hidden transition-all hover:scale-[1.01]">
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-border/30">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
+      <div className="p-3 md:p-4 flex items-center justify-between border-b border-border/30">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold ${
             post.profiles.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"
           }`}>
             {post.profiles.username.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold">{post.profiles.username}</div>
+            <div className="text-sm md:text-base font-semibold">{post.profiles.username}</div>
             <div className="text-xs text-muted-foreground">
               {formatTimeAgo(post.created_at)}
             </div>
@@ -102,16 +106,18 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
           src={post.front_media_url}
           alt="Post"
           className="w-full h-full object-cover"
+          loading="lazy"
           onError={(e) => {
             e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop";
           }}
         />
         {post.back_media_url && (
-          <div className="absolute top-4 right-4 w-24 h-24 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg">
+          <div className="absolute top-2 right-2 md:top-4 md:right-4 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg">
             <img
               src={post.back_media_url}
               alt="Back camera"
               className="w-full h-full object-cover"
+              loading="lazy"
               onError={(e) => {
                 e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&auto=format&fit=crop";
               }}
@@ -121,16 +127,16 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
       </div>
 
       {/* Actions */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-center gap-2">
+      <div className="p-3 md:p-4 space-y-2 md:space-y-3">
+        <div className="flex items-center gap-1 md:gap-2">
           <Button
             variant="ghost"
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("love")}
-            className="gap-1"
+            className="gap-1 h-10 md:h-9"
           >
-            <Heart className="w-4 h-4" />
+            <Heart className="w-4 h-4 md:w-5 md:h-5" />
             {getReactionCount("love") > 0 && (
               <span className="text-xs">{getReactionCount("love")}</span>
             )}
@@ -140,9 +146,9 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("fire")}
-            className="gap-1"
+            className="gap-1 h-10 md:h-9"
           >
-            <Flame className="w-4 h-4" />
+            <Flame className="w-4 h-4 md:w-5 md:h-5" />
             {getReactionCount("fire") > 0 && (
               <span className="text-xs">{getReactionCount("fire")}</span>
             )}
@@ -152,9 +158,9 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("eyes")}
-            className="gap-1"
+            className="gap-1 h-10 md:h-9"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4 md:w-5 md:h-5" />
             {getReactionCount("eyes") > 0 && (
               <span className="text-xs">{getReactionCount("eyes")}</span>
             )}
@@ -164,9 +170,9 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("comment")}
-            className="gap-1"
+            className="gap-1 h-10 md:h-9"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
             {getReactionCount("comment") > 0 && (
               <span className="text-xs">{getReactionCount("comment")}</span>
             )}
@@ -174,7 +180,7 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
         </div>
 
         {post.caption && (
-          <p className="text-sm">
+          <p className="text-xs md:text-sm">
             <span className="font-semibold mr-2">{post.profiles.username}</span>
             {post.caption}
           </p>

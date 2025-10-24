@@ -59,6 +59,47 @@ All colors MUST be HSL.
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
+  .light {
+    /* Light theme colors */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+
+    --primary: 211 85% 55%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 211 100% 65%;
+
+    --secondary: 220 10% 40%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 220 10% 95%;
+    --muted-foreground: 220 10% 40%;
+
+    --accent: 280 60% 55%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 10% 88%;
+    --input: 220 10% 92%;
+    --ring: 211 85% 55%;
+
+    /* Light theme glassmorphism */
+    --glass-bg: hsla(0, 0%, 100%, 0.7);
+    --glass-border: hsla(240, 10%, 10%, 0.1);
+
+    /* Light theme shadows */
+    --shadow-regulus: 0 0 30px hsla(211, 85%, 55%, 0.25);
+    --shadow-ghost: 0 0 20px hsla(220, 10%, 40%, 0.15);
+    --shadow-card: 0 10px 40px hsla(0, 0%, 0%, 0.1);
+  }
 }
 
 @layer base {
@@ -101,5 +142,29 @@ All colors MUST be HSL.
 
   .text-glow-ghost {
     text-shadow: 0 0 15px hsla(220, 10%, 45%, 0.4);
+  }
+
+  /* Safe area support for mobile devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Touch-friendly tap targets */
+  @media (max-width: 768px) {
+    button,
+    a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+
+  /* Smooth scroll for mobile */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
 }
