@@ -13,7 +13,7 @@ const Landing = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
         
         <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 text-center">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 text-glow-regulus">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-marker mb-6 text-glow-regulus tracking-wider">
             Regulargram
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-4">
