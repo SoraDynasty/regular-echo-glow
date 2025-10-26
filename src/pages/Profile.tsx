@@ -97,14 +97,8 @@ const Profile = () => {
 
         {/* Stats */}
         <div className="flex justify-center gap-12 mb-6">
-          <div className="text-center">
-            <div className="text-2xl font-bold">{postsCount}</div>
-            <div className="text-xs text-muted-foreground">BeReals</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold">{followersCount}</div>
-            <div className="text-xs text-muted-foreground">Friends</div>
-          </div>
+          
+          
           <div className="text-center">
             <div className="text-2xl font-bold">{followingCount}</div>
             <div className="text-xs text-muted-foreground">Following</div>
