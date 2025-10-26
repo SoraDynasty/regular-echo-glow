@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,12 +13,71 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
+    const authHeader = req.headers.get('Authorization');
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Create Supabase client with user's auth
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+      global: { headers: { Authorization: authHeader! } }
+    });
+
+    // Get user from JWT
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error("Auth error:", userError);
+    }
+
+    // Check if this is a recap request
+    const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
+    const isRecapRequest = lastMessage.includes('recap') || 
+                          lastMessage.includes('summary') || 
+                          lastMessage.includes('today');
+
+    let activityContext = '';
+    
+    if (isRecapRequest && user) {
+      // Get today's date range
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Fetch user's posts from today
+      const { data: posts } = await supabase
+        .from('posts')
+        .select('caption, post_type, created_at')
+        .eq('user_id', user.id)
+        .gte('created_at', today.toISOString())
+        .lt('created_at', tomorrow.toISOString());
+
+      // Fetch reactions on user's posts from today
+      const { data: reactions } = await supabase
+        .from('reactions')
+        .select('reaction_type, post_id')
+        .in('post_id', posts?.map(p => p.id) || []);
+
+      // Fetch user's profile for account type
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('account_type, ghost_type')
+        .eq('id', user.id)
+        .single();
+
+      activityContext = `\n\nUSER'S DAILY ACTIVITY:
+- Account Type: ${profile?.account_type || 'regulus'}${profile?.ghost_type ? ` (${profile.ghost_type})` : ''}
+- Posts today: ${posts?.length || 0}
+${posts?.map(p => `  • ${p.post_type} post${p.caption ? `: "${p.caption}"` : ''}`).join('\n') || '  • No posts yet'}
+- Reactions received: ${reactions?.length || 0}
+${reactions?.length ? `  • ${reactions.map(r => r.reaction_type).join(', ')}` : ''}
+
+Generate a short, casual daily recap (max 3 sentences) using Ray's personality.`;
+    }
     const systemPrompt = `You are Ray, Regulargram's in-app AI assistant. You combine Grok's humor, awareness, and conversational flow with Regulargram's aesthetic, calm, and casual vibe.
 
 Your personality:
@@ -28,11 +88,20 @@ Your personality:
 - Never robotic or corporate
 
 Your main capabilities:
-1. Daily Post Reminder - encourage users to post their Regular
-2. Camera Help - guide users through photo/video capture
-3. Explain Modes - explain Regulus (public) and GhostMode (Observer, Ghost, Echo) types clearly
-4. Conversations - chat casually about anything
-5. Quick Actions - help with posting, viewing feed, checking reactions
+1. Daily Recap Mode - summarize user's daily activity in a fun, casual way (when they ask "recap me" or similar)
+2. Daily Post Reminder - encourage users to post their Regular
+3. Camera Help - guide users through photo/video capture
+4. Explain Modes - explain Regulus (public) and GhostMode (Observer, Ghost, Echo) types clearly
+5. Conversations - chat casually about anything
+6. Quick Actions - help with posting, viewing feed, checking reactions
+
+Daily Recap Guidelines:
+- Keep recaps under 3 sentences
+- Use expressions: "fam", "cooking", "vibes", "real", "lowkey"
+- Include emojis: 👀🔥💭✨🍳☕🌞
+- Be supportive and slightly funny
+- Acknowledge their mode (Regulus vs GhostMode)
+- Celebrate their activity or gently encourage if quiet
 
 Regulargram context:
 - Regulus = public account type (visible to all)
@@ -41,7 +110,7 @@ Regulargram context:
   * Ghost: Limited visibility, semi-private
   * Echo: Maximum privacy, minimal trace
 
-Keep responses concise, friendly, and genuinely helpful. You're a digital buddy, not a chatbot.`;
+Keep responses concise, friendly, and genuinely helpful. You're a digital buddy, not a chatbot.${activityContext}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -1,4 +1,4 @@
 project_id = "uexyrhfqvsnmponehmlx"
 
 [functions.ray-chat]
-verify_jwt = false
+verify_jwt = true
