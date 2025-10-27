@@ -68,7 +68,7 @@ const Profile = () => {
   return <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="safe-area-top px-4 py-4 flex items-center justify-end">
-        <Button variant="ghost" size="icon" onClick={() => toast.info("Settings coming soon")} className="rounded-full">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/edit-profile")} className="rounded-full">
           <Settings className="w-6 h-6" />
         </Button>
       </header>
@@ -83,7 +83,16 @@ const Profile = () => {
         </div>
 
         {/* Username */}
-        <h1 className="text-2xl font-bold text-center mb-2">{profile.username}</h1>
+        <h1 className="text-2xl font-bold text-center mb-2">
+          {profile.full_name || profile.username}
+        </h1>
+        
+        {/* Username handle */}
+        {profile.full_name && (
+          <p className="text-sm text-muted-foreground text-center mb-1">
+            @{profile.username}
+          </p>
+        )}
         
         {/* Bio */}
         <p className="text-sm text-muted-foreground text-center mb-1">
@@ -92,6 +101,7 @@ const Profile = () => {
         
         {/* Location/Account Type */}
         <p className="text-xs text-muted-foreground text-center mb-6">
+          {profile.location && `${profile.location} • `}
           {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
         </p>
 
