@@ -19,6 +19,7 @@ const EditProfile = () => {
     bio: "",
     location: "",
   });
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -48,6 +49,58 @@ const EditProfile = () => {
         bio: data.bio || "",
         location: data.location || "",
       });
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !profile) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${profile.id}/${Date.now()}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', profile.id);
+
+      if (updateError) throw updateError;
+
+      setProfile({ ...profile, avatar_url: publicUrl });
+      toast.success("Profile picture updated");
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -112,13 +165,23 @@ const EditProfile = () => {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
           )}
-          <button
-            onClick={() => toast.info("Profile picture upload coming soon")}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 hover:bg-background transition-colors"
+          <input
+            type="file"
+            id="avatar-upload"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+            disabled={uploading}
+          />
+          <label
+            htmlFor="avatar-upload"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 hover:bg-background transition-colors cursor-pointer"
           >
             <Camera className="w-5 h-5" />
-            <span className="font-medium">Update profile picture</span>
-          </button>
+            <span className="font-medium">
+              {uploading ? "Uploading..." : "Update profile picture"}
+            </span>
+          </label>
         </div>
       </div>
 
