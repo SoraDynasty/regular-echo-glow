@@ -94,8 +94,10 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          full_name: string | null
           ghost_type: Database["public"]["Enums"]["ghost_type"] | null
           id: string
+          location: string | null
           updated_at: string
           username: string
         }
@@ -104,8 +106,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          full_name?: string | null
           ghost_type?: Database["public"]["Enums"]["ghost_type"] | null
           id: string
+          location?: string | null
           updated_at?: string
           username: string
         }
@@ -114,8 +118,10 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          full_name?: string | null
           ghost_type?: Database["public"]["Enums"]["ghost_type"] | null
           id?: string
+          location?: string | null
           updated_at?: string
           username?: string
         }
