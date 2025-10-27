@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,15 +11,16 @@ import type { Database } from "@/integrations/supabase/types";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     username: "",
     bio: "",
     location: "",
   });
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -56,15 +57,13 @@ const EditProfile = () => {
     const file = event.target.files?.[0];
     if (!file || !profile) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error("Please select an image file");
+      toast.error('Please select an image file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
+      toast.error('Image size must be less than 5MB');
       return;
     }
 
@@ -72,21 +71,19 @@ const EditProfile = () => {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const filePath = `${profile.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${profile.id}/${fileName}`;
 
-      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -95,10 +92,10 @@ const EditProfile = () => {
       if (updateError) throw updateError;
 
       setProfile({ ...profile, avatar_url: publicUrl });
-      toast.success("Profile picture updated");
+      toast.success('Profile picture updated');
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error("Failed to upload image");
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
     } finally {
       setUploading(false);
     }
@@ -155,6 +152,13 @@ const EditProfile = () => {
 
       {/* Profile Picture Section */}
       <div className="px-4 mb-8">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
         <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-muted flex items-center justify-center">
           {profile.avatar_url ? (
             <img
@@ -165,23 +169,16 @@ const EditProfile = () => {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
           )}
-          <input
-            type="file"
-            id="avatar-upload"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
+          <button
+            onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-          />
-          <label
-            htmlFor="avatar-upload"
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 hover:bg-background transition-colors cursor-pointer"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/90 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 hover:bg-background transition-colors disabled:opacity-50"
           >
             <Camera className="w-5 h-5" />
             <span className="font-medium">
-              {uploading ? "Uploading..." : "Update profile picture"}
+              {uploading ? 'Uploading...' : 'Update profile picture'}
             </span>
-          </label>
+          </button>
         </div>
       </div>
 
