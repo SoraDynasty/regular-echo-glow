@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Search, MessageCircle, Sparkles } from "lucide-react";
+import { Search, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import MobileNav from "@/components/MobileNav";
 import type { Database } from "@/integrations/supabase/types";
@@ -98,7 +98,7 @@ const Chat = () => {
           </div>
         ) : filteredFriends.length === 0 ? (
           <div className="text-center py-12">
-            <MessageCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <Send className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
             <h3 className="text-lg font-semibold mb-2">No chats yet</h3>
             <p className="text-sm text-muted-foreground">
               Follow friends to start chatting!
