@@ -77,8 +77,16 @@ const Profile = () => {
       <main className="px-4 pb-6">
         {/* Profile Picture */}
         <div className="flex justify-center mb-4">
-          <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 border-border ${profile.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"}`}>
-            {profile.account_type === "regulus" ? <Sparkles className="w-16 h-16" /> : <GhostIcon className="w-16 h-16" />}
+          <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 border-border overflow-hidden ${profile.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"}`}>
+            {profile.avatar_url ? (
+              <img 
+                src={profile.avatar_url} 
+                alt={profile.username}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              profile.account_type === "regulus" ? <Sparkles className="w-16 h-16" /> : <GhostIcon className="w-16 h-16" />
+            )}
           </div>
         </div>
 
