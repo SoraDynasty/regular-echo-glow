@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import RayChat from "./RayChat";
 import { haptics } from "@/lib/haptics";
@@ -42,7 +42,7 @@ const RayFloatingIcon = () => {
           {isOpen ? (
             <X className="w-6 h-6" />
           ) : (
-            <MessageCircle className="w-6 h-6" />
+            <Send className="w-6 h-6" />
           )}
         </Button>
       </div>
