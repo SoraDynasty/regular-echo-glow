@@ -166,6 +166,42 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          paypal_subscription_id: string | null
+          started_at: string | null
+          status: string
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          paypal_subscription_id?: string | null
+          started_at?: string | null
+          status?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          paypal_subscription_id?: string | null
+          started_at?: string | null
+          status?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -177,6 +213,7 @@ export type Database = {
       account_type: "regulus" | "ghost"
       ghost_type: "observer" | "ghost" | "echo"
       post_type: "photo" | "video"
+      subscription_tier: "free" | "ghost_premium" | "regulus_premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -307,6 +344,7 @@ export const Constants = {
       account_type: ["regulus", "ghost"],
       ghost_type: ["observer", "ghost", "echo"],
       post_type: ["photo", "video"],
+      subscription_tier: ["free", "ghost_premium", "regulus_premium"],
     },
   },
 } as const

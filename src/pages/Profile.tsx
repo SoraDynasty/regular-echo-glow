@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Settings, Sparkles, Ghost as GhostIcon, QrCode } from "lucide-react";
+import { Settings, Sparkles, Ghost as GhostIcon, QrCode, Crown } from "lucide-react";
 import { toast } from "sonner";
 import MobileNav from "@/components/MobileNav";
 import type { Database } from "@/integrations/supabase/types";
@@ -12,6 +12,7 @@ const Profile = () => {
   const [postsCount, setPostsCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [subscription, setSubscription] = useState<any>(null);
   useEffect(() => {
     loadProfile();
   }, []);
@@ -58,6 +59,14 @@ const Profile = () => {
         head: true
       }).eq("follower_id", data.id);
       setFollowingCount(following || 0);
+
+      // Load subscription status
+      const { data: subData } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", data.id)
+        .single();
+      setSubscription(subData);
     }
   };
   if (!profile) {
@@ -122,6 +131,28 @@ const Profile = () => {
             <div className="text-xs text-muted-foreground">Following</div>
           </div>
         </div>
+
+        {/* Premium Badge */}
+        {subscription?.status === 'active' && (
+          <div className="glass-card p-3 rounded-2xl mb-4 text-center border border-primary/20">
+            <Crown className="w-5 h-5 inline mr-2 text-primary" />
+            <span className="text-sm font-semibold">
+              {subscription.tier === 'ghost_premium' ? 'Ghost Premium' : 'Regulus Premium'}
+            </span>
+          </div>
+        )}
+
+        {/* Upgrade Button */}
+        {(!subscription || subscription.status !== 'active') && (
+          <Button 
+            className="w-full rounded-2xl h-12 mb-4" 
+            variant="regulus"
+            onClick={() => navigate("/subscribe")}
+          >
+            <Crown className="w-4 h-4 mr-2" />
+            Upgrade to Premium
+          </Button>
+        )}
 
         {/* Share Profile Button */}
         <Button className="w-full rounded-2xl h-12 mb-6" variant="outline" onClick={() => toast.info("Share profile coming soon")}>

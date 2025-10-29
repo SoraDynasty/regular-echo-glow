@@ -13,6 +13,7 @@ import Chat from "./pages/Chat";
 import Capture from "./pages/Capture";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Subscribe from "./pages/Subscribe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/capture" element={<Capture />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/subscribe" element={<Subscribe />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
