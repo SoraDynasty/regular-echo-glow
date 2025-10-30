@@ -82,12 +82,11 @@ const Profile = () => {
           {(!subscription || subscription.status !== 'active') && (
             <Button 
               variant="regulus"
-              size="sm"
+              size="icon"
               onClick={() => navigate("/subscribe")}
               className="rounded-full"
             >
-              <Crown className="w-4 h-4 mr-1" />
-              Premium
+              <Crown className="w-4 h-4" />
             </Button>
           )}
           <Button variant="ghost" size="icon" onClick={() => navigate("/edit-profile")} className="rounded-full">
