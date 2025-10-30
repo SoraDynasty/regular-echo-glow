@@ -76,10 +76,24 @@ const Profile = () => {
   }
   return <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="safe-area-top px-4 py-4 flex items-center justify-end">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/edit-profile")} className="rounded-full">
-          <Settings className="w-6 h-6" />
-        </Button>
+      <header className="safe-area-top px-4 py-4 flex items-center justify-between">
+        <div className="flex-1" />
+        <div className="flex items-center gap-2">
+          {(!subscription || subscription.status !== 'active') && (
+            <Button 
+              variant="regulus"
+              size="sm"
+              onClick={() => navigate("/subscribe")}
+              className="rounded-full"
+            >
+              <Crown className="w-4 h-4 mr-1" />
+              Premium
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={() => navigate("/edit-profile")} className="rounded-full">
+            <Settings className="w-6 h-6" />
+          </Button>
+        </div>
       </header>
 
       {/* Profile Content */}
@@ -142,17 +156,6 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Upgrade Button */}
-        {(!subscription || subscription.status !== 'active') && (
-          <Button 
-            className="w-full rounded-2xl h-12 mb-4" 
-            variant="regulus"
-            onClick={() => navigate("/subscribe")}
-          >
-            <Crown className="w-4 h-4 mr-2" />
-            Upgrade to Premium
-          </Button>
-        )}
 
         {/* Share Profile Button */}
         <Button className="w-full rounded-2xl h-12 mb-6" variant="outline" onClick={() => toast.info("Share profile coming soon")}>
