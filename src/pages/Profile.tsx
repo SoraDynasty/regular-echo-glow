@@ -81,12 +81,12 @@ const Profile = () => {
         <div className="flex items-center gap-2">
           {(!subscription || subscription.status !== 'active') && (
             <Button 
-              variant="regulus"
+              variant="ghost"
               size="icon"
               onClick={() => navigate("/subscribe")}
-              className="rounded-full"
+              className="rounded-full hover:bg-primary/10 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
             >
-              <Crown className="w-4 h-4" />
+              <Crown className="w-4 h-4 text-blue-400" />
             </Button>
           )}
           <Button variant="ghost" size="icon" onClick={() => navigate("/edit-profile")} className="rounded-full">
