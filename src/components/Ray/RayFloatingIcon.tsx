@@ -27,7 +27,7 @@ const RayFloatingIcon = () => {
   };
   return <>
       {/* Floating Icon */}
-      <div className="fixed bottom-24 right-6 z-50">
+      <div className="fixed bottom-28 right-6 z-50">
         <Button
           onClick={handleToggle}
           size="icon"
