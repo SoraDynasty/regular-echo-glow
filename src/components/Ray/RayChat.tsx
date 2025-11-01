@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -88,9 +88,17 @@ const RayChat = ({ onClose, onStateChange }: RayChatProps) => {
   return (
     <div className="bg-background/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl overflow-hidden h-[500px] flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-purple-500/10">
+      <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-purple-500/10 relative">
         <h3 className="font-bold text-lg">Ray 🤖</h3>
         <p className="text-xs text-muted-foreground">Your Regulargram AI buddy</p>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute top-2 right-2 rounded-full w-8 h-8"
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
 
       {/* Messages */}

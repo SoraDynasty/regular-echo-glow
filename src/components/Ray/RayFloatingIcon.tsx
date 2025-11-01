@@ -39,11 +39,7 @@ const RayFloatingIcon = () => {
           className={`w-14 h-14 rounded-full shadow-2xl transition-all duration-300 ${getGlowClass()}`}
           variant="default"
         >
-          {isOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Send className="w-6 h-6" />
-          )}
+          <Send className="w-6 h-6" />
         </Button>
       </div>
 
