@@ -28,7 +28,13 @@ const RayFloatingIcon = () => {
   return <>
       {/* Floating Icon */}
       <div className="fixed bottom-24 right-6 z-50">
-        
+        <Button
+          onClick={handleToggle}
+          size="icon"
+          className={`w-14 h-14 rounded-full shadow-lg ${getGlowClass()} transition-all duration-300`}
+        >
+          <Send className="w-6 h-6" />
+        </Button>
       </div>
 
       {/* Chat Overlay */}
