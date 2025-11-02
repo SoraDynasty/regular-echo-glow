@@ -6,6 +6,8 @@ import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun } from "l
 import { toast } from "sonner";
 import PostCard from "@/components/PostCard";
 import MobileNav from "@/components/MobileNav";
+import NotificationBell from "@/components/Notifications/NotificationBell";
+import LoadingAnimation from "@/components/LoadingAnimation";
 import { useTheme } from "@/hooks/use-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import type { Database } from "@/integrations/supabase/types";
@@ -101,6 +103,8 @@ const Feed = () => {
               </div>
             )}
             
+            <NotificationBell />
+            
             <Button
               variant="ghost"
               size="icon"
@@ -151,10 +155,7 @@ const Feed = () => {
 
         {/* Posts Feed */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-muted-foreground mt-4">Loading feed...</p>
-          </div>
+          <LoadingAnimation />
         ) : posts.length === 0 ? (
           <div className="text-center py-12 glass-card rounded-2xl p-6">
             <Camera className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-4 text-muted-foreground" />

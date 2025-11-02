@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Settings, Sparkles, Ghost as GhostIcon, QrCode, Crown } from "lucide-react";
-import { toast } from "sonner";
+import { Settings, Sparkles, Ghost as GhostIcon, Crown } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
+import ShareProfileQR from "@/components/Profile/ShareProfileQR";
+import LoadingAnimation from "@/components/LoadingAnimation";
 import type { Database } from "@/integrations/supabase/types";
 const Profile = () => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const Profile = () => {
   };
   if (!profile) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <LoadingAnimation />
       </div>;
   }
   return <div className="min-h-screen bg-background pb-24">
@@ -157,10 +158,9 @@ const Profile = () => {
 
 
         {/* Share Profile Button */}
-        <Button className="w-full rounded-2xl h-12 mb-6" variant="outline" onClick={() => toast.info("Share profile coming soon")}>
-          <QrCode className="w-4 h-4 mr-2" />
-          Share Profile
-        </Button>
+        <div className="mb-6">
+          <ShareProfileQR username={profile.username} userId={profile.id} />
+        </div>
 
         {/* Privacy Notice */}
         

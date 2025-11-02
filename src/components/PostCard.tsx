@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Eye, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import CommentSection from "@/components/Comments/CommentSection";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -19,6 +21,20 @@ interface PostCardProps {
 
 const PostCard = ({ post, onReaction }: PostCardProps) => {
   const [reacting, setReacting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+
+  useEffect(() => {
+    loadCommentCount();
+  }, [post.id]);
+
+  const loadCommentCount = async () => {
+    const { count } = await supabase
+      .from('comments')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', post.id);
+    setCommentCount(count || 0);
+  };
 
   const handleReaction = async (reactionType: string) => {
     haptics.light();
@@ -45,6 +61,18 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
           user_id: session.user.id,
           reaction_type: reactionType,
         });
+        
+        // Create notification for post owner
+        if (session.user.id !== post.user_id) {
+          await supabase.from("notifications").insert({
+            user_id: post.user_id,
+            type: "reaction",
+            content: `${session.user.user_metadata?.username || 'Someone'} reacted to your post`,
+            related_post_id: post.id,
+            related_user_id: session.user.id
+          });
+        }
+        
         haptics.success();
       }
 
@@ -168,13 +196,12 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            disabled={reacting}
-            onClick={() => handleReaction("comment")}
+            onClick={() => setShowComments(!showComments)}
             className="gap-1 h-10 md:h-9"
           >
             <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
-            {getReactionCount("comment") > 0 && (
-              <span className="text-xs">{getReactionCount("comment")}</span>
+            {commentCount > 0 && (
+              <span className="text-xs">{commentCount}</span>
             )}
           </Button>
         </div>
@@ -185,6 +212,17 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
             {post.caption}
           </p>
         )}
+
+        {/* Comments Section */}
+        <Collapsible open={showComments} onOpenChange={setShowComments}>
+          <CollapsibleContent className="mt-3 pt-3 border-t border-border/30">
+            <CommentSection 
+              postId={post.id} 
+              postUserId={post.user_id}
+              onCommentAdded={loadCommentCount}
+            />
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </Card>
   );
