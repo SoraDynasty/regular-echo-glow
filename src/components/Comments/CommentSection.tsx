@@ -7,6 +7,7 @@ import { Send, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { UserBadge } from "@/components/Badge/UserBadge";
 
 interface Comment {
   id: string;
@@ -17,6 +18,7 @@ interface Comment {
     username: string;
     avatar_url: string | null;
   };
+  badges?: any[];
 }
 
 interface CommentSectionProps {
@@ -31,6 +33,7 @@ const CommentSection = ({ postId, postUserId, onCommentAdded }: CommentSectionPr
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [commentBadges, setCommentBadges] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     loadComments();
@@ -76,6 +79,24 @@ const CommentSection = ({ postId, postUserId, onCommentAdded }: CommentSectionPr
 
     if (!error && data) {
       setComments(data as any);
+      
+      // Load badges for all comment authors
+      const userIds = data.map((c: any) => c.user_id);
+      const { data: badgesData } = await supabase
+        .from('badges')
+        .select('*')
+        .in('user_id', userIds);
+      
+      if (badgesData) {
+        const badgesByUser: Record<string, any[]> = {};
+        badgesData.forEach(badge => {
+          if (!badgesByUser[badge.user_id]) {
+            badgesByUser[badge.user_id] = [];
+          }
+          badgesByUser[badge.user_id].push(badge);
+        });
+        setCommentBadges(badgesByUser);
+      }
     }
     setLoading(false);
   };
@@ -166,8 +187,11 @@ const CommentSection = ({ postId, postUserId, onCommentAdded }: CommentSectionPr
               <AvatarFallback>{comment.profiles.username[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-sm">{comment.profiles.username}</span>
+                {commentBadges[comment.user_id] && (
+                  <UserBadge badges={commentBadges[comment.user_id]} size="sm" />
+                )}
                 <span className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                 </span>

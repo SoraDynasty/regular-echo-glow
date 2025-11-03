@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          badge_number: number
+          badge_type: Database["public"]["Enums"]["badge_type"]
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_number: number
+          badge_type: Database["public"]["Enums"]["badge_type"]
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_number?: number
+          badge_type?: Database["public"]["Enums"]["badge_type"]
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -284,6 +308,7 @@ export type Database = {
     }
     Enums: {
       account_type: "regulus" | "ghost"
+      badge_type: "ghost" | "observer" | "echo" | "regulus" | "founders_circle"
       ghost_type: "observer" | "ghost" | "echo"
       post_type: "photo" | "video"
       subscription_tier: "free" | "ghost_premium" | "regulus_premium"
@@ -415,6 +440,7 @@ export const Constants = {
   public: {
     Enums: {
       account_type: ["regulus", "ghost"],
+      badge_type: ["ghost", "observer", "echo", "regulus", "founders_circle"],
       ghost_type: ["observer", "ghost", "echo"],
       post_type: ["photo", "video"],
       subscription_tier: ["free", "ghost_premium", "regulus_premium"],

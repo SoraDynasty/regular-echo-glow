@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import CommentSection from "@/components/Comments/CommentSection";
+import { UserBadge } from "@/components/Badge/UserBadge";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -23,9 +24,11 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
   const [reacting, setReacting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [badges, setBadges] = useState<any[]>([]);
 
   useEffect(() => {
     loadCommentCount();
+    loadUserBadges();
   }, [post.id]);
 
   const loadCommentCount = async () => {
@@ -34,6 +37,16 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
       .select('*', { count: 'exact', head: true })
       .eq('post_id', post.id);
     setCommentCount(count || 0);
+  };
+
+  const loadUserBadges = async () => {
+    const { data } = await supabase
+      .from('badges')
+      .select('*')
+      .eq('user_id', post.user_id);
+    if (data) {
+      setBadges(data);
+    }
   };
 
   const handleReaction = async (reactionType: string) => {
@@ -119,8 +132,11 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
           }`}>
             {post.profiles.username.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div className="text-sm md:text-base font-semibold">{post.profiles.username}</div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm md:text-base font-semibold">{post.profiles.username}</span>
+              <UserBadge badges={badges} size="sm" />
+            </div>
             <div className="text-xs text-muted-foreground">
               {formatTimeAgo(post.created_at)}
             </div>

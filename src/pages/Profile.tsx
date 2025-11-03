@@ -6,6 +6,7 @@ import { Settings, Sparkles, Ghost as GhostIcon, Crown } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import ShareProfileQR from "@/components/Profile/ShareProfileQR";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import { UserBadge } from "@/components/Badge/UserBadge";
 import type { Database } from "@/integrations/supabase/types";
 const Profile = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Profile = () => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [subscription, setSubscription] = useState<any>(null);
+  const [badges, setBadges] = useState<any[]>([]);
   useEffect(() => {
     loadProfile();
   }, []);
@@ -68,6 +70,15 @@ const Profile = () => {
         .eq("user_id", data.id)
         .single();
       setSubscription(subData);
+
+      // Load badges
+      const { data: badgeData } = await supabase
+        .from("badges")
+        .select("*")
+        .eq("user_id", data.id);
+      if (badgeData) {
+        setBadges(badgeData);
+      }
     }
   };
   if (!profile) {
@@ -117,6 +128,13 @@ const Profile = () => {
         <h1 className="text-2xl font-bold text-center mb-2">
           {profile.full_name || profile.username}
         </h1>
+        
+        {/* Badges */}
+        {badges.length > 0 && (
+          <div className="flex justify-center mb-2">
+            <UserBadge badges={badges} size="lg" />
+          </div>
+        )}
         
         {/* Username handle */}
         {profile.full_name && (
