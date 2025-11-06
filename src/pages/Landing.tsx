@@ -43,14 +43,7 @@ const Landing = () => {
             <Link to="/auth" className="w-full sm:w-auto">
               <Button size="lg" variant="regulus" className="w-full min-h-[56px] text-base md:text-lg px-6 md:px-8 py-4 md:py-7 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 group">
                 <Zap className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                Get Started Free
-              </Button>
-            </Link>
-            
-            <Link to="/auth" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full min-h-[56px] text-base md:text-lg px-6 md:px-8 py-4 md:py-7 rounded-2xl font-semibold border-2 hover:bg-background/5 transition-all hover:scale-105">
-                <Camera className="w-5 h-5 mr-2" />
-                Learn More
+                Get Started
               </Button>
             </Link>
           </div>
