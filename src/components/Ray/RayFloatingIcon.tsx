@@ -5,7 +5,7 @@ import RayChat from "./RayChat";
 import { haptics } from "@/lib/haptics";
 import { supabase } from "@/integrations/supabase/client";
 
-type RayState = "idle" | "listening" | "cooking" | "responding";
+type RayState = "idle" | "listening" | "cooking" | "responding" | "recording" | "transcribing" | "speaking";
 
 const RayFloatingIcon = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,10 +42,16 @@ const RayFloatingIcon = () => {
         return "ray-idle";
       case "listening":
         return "ray-listening";
+      case "recording":
+        return "ray-listening"; // Same effect for recording
+      case "transcribing":
+        return "ray-cooking"; // Show cooking state while transcribing
       case "cooking":
         return "ray-cooking";
       case "responding":
         return "ray-responding";
+      case "speaking":
+        return "ray-responding"; // Same effect for speaking
       default:
         return "ray-idle";
     }

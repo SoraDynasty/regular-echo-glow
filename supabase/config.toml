@@ -3,5 +3,11 @@ project_id = "uexyrhfqvsnmponehmlx"
 [functions.ray-chat]
 verify_jwt = true
 
+[functions.speech-to-text]
+verify_jwt = true
+
+[functions.text-to-speech]
+verify_jwt = true
+
 [functions.paypal-webhook]
 verify_jwt = false
