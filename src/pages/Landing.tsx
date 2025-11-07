@@ -51,7 +51,7 @@ const Landing = () => {
           <div className="mt-8 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-xs md:text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.5s' }}>
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" />
-              <span>Join thousands</span>
+              <span>Let's ride</span>
             </div>
             <div className="hidden sm:block w-1 h-1 rounded-full bg-muted-foreground/50" />
             <div className="flex items-center gap-2">
