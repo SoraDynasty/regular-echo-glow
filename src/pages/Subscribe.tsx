@@ -48,8 +48,8 @@ const Subscribe = () => {
   const handleSubscribe = (planType: 'ghost_premium' | 'regulus_premium') => {
     // PayPal plan IDs - Replace these with your actual PayPal plan IDs
     const planIds = {
-      ghost_premium: 'P-GHOST-PLAN-ID', // $1.49/month plan
-      regulus_premium: 'P-REGULUS-PLAN-ID', // $2.99/month plan
+      ghost_premium: 'P-GHOST-PLAN-ID', // $5.00/month plan
+      regulus_premium: 'P-REGULUS-PLAN-ID', // $5.00/month plan
     };
 
     const paypalUrl = `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${planIds[planType]}&custom_id=${user?.id}`;
@@ -102,7 +102,7 @@ const Subscribe = () => {
             <CardHeader>
               <CardTitle className="text-xl">Ghost Premium</CardTitle>
               <CardDescription className="text-2xl font-bold text-foreground">
-                $1.49<span className="text-sm font-normal text-muted-foreground">/month</span>
+                $5.00<span className="text-sm font-normal text-muted-foreground">/month</span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -139,7 +139,7 @@ const Subscribe = () => {
             <CardHeader>
               <CardTitle className="text-xl">Regulus Premium</CardTitle>
               <CardDescription className="text-2xl font-bold text-foreground">
-                $2.99<span className="text-sm font-normal text-muted-foreground">/month</span>
+                $5.00<span className="text-sm font-normal text-muted-foreground">/month</span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
