@@ -46,15 +46,10 @@ const Subscribe = () => {
   }, [navigate]);
 
   const handleSubscribe = (planType: 'ghost_premium' | 'regulus_premium') => {
-    // PayPal plan IDs - Replace these with your actual PayPal plan IDs
-    const planIds = {
-      ghost_premium: 'AW5f2p7crLF9c950Jy0q2X5lAX79GBfeSC6ccLhAVZNk2m2XRUS0mUpWFrAXly2TGT9_tEm5N3521geF', // $5.00/month plan
-      regulus_premium: 'ELwKMHlR-dR_StqixexdJeZhkVd48ng0y2pOzzAxyZM4tzZRKTcbynsE8GX-BMPbNoHaBH50kJnPgR32', // $5.00/month plan
-    };
-
-    const paypalUrl = `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${planIds[planType]}&custom_id=${user?.id}`;
-    
-    window.location.href = paypalUrl;
+    toast({
+      title: "Coming Soon",
+      description: "Subscription payments will be available soon.",
+    });
   };
 
   if (loading) {
@@ -128,9 +123,9 @@ const Subscribe = () => {
                 className="w-full"
                 variant="regulus"
                 onClick={() => handleSubscribe('ghost_premium')}
-                disabled={hasActiveSubscription && subscription?.tier === 'ghost_premium'}
+                disabled={hasActiveSubscription}
               >
-                {hasActiveSubscription && subscription?.tier === 'ghost_premium' ? 'Current Plan' : 'Subscribe Now'}
+                {hasActiveSubscription && subscription?.tier === 'ghost_premium' ? 'Current Plan' : 'Coming Soon'}
               </Button>
             </CardContent>
           </Card>
@@ -165,16 +160,16 @@ const Subscribe = () => {
                 className="w-full"
                 variant="regulus"
                 onClick={() => handleSubscribe('regulus_premium')}
-                disabled={hasActiveSubscription && subscription?.tier === 'regulus_premium'}
+                disabled={hasActiveSubscription}
               >
-                {hasActiveSubscription && subscription?.tier === 'regulus_premium' ? 'Current Plan' : 'Subscribe Now'}
+                {hasActiveSubscription && subscription?.tier === 'regulus_premium' ? 'Current Plan' : 'Coming Soon'}
               </Button>
             </CardContent>
           </Card>
         )}
 
         <p className="text-xs text-center text-muted-foreground px-4">
-          Subscriptions are billed monthly via PayPal. Cancel anytime from your PayPal account.
+          Premium subscriptions coming soon. Stay tuned for updates!
         </p>
       </main>
     </div>
