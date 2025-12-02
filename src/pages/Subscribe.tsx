@@ -48,8 +48,8 @@ const Subscribe = () => {
   const handleSubscribe = (planType: 'ghost_premium' | 'regulus_premium') => {
     // PayPal plan IDs - Replace these with your actual PayPal plan IDs
     const planIds = {
-      ghost_premium: 'P-GHOST-PLAN-ID', // $5.00/month plan
-      regulus_premium: 'P-REGULUS-PLAN-ID', // $5.00/month plan
+      ghost_premium: 'AW5f2p7crLF9c950Jy0q2X5lAX79GBfeSC6ccLhAVZNk2m2XRUS0mUpWFrAXly2TGT9_tEm5N3521geF', // $5.00/month plan
+      regulus_premium: 'ELwKMHlR-dR_StqixexdJeZhkVd48ng0y2pOzzAxyZM4tzZRKTcbynsE8GX-BMPbNoHaBH50kJnPgR32', // $5.00/month plan
     };
 
     const paypalUrl = `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${planIds[planType]}&custom_id=${user?.id}`;
