@@ -46,10 +46,15 @@ const Subscribe = () => {
   }, [navigate]);
 
   const handleSubscribe = (planType: 'ghost_premium' | 'regulus_premium') => {
-    toast({
-      title: "Coming Soon",
-      description: "Subscription payments will be available soon.",
-    });
+    // PayPal plan IDs - Replace these with your actual PayPal plan IDs
+    const planIds = {
+      ghost_premium: 'P-GHOST-PLAN-ID', // $5.00/month plan
+      regulus_premium: 'P-REGULUS-PLAN-ID', // $5.00/month plan
+    };
+
+    const paypalUrl = `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${planIds[planType]}&custom_id=${user?.id}`;
+    
+    window.location.href = paypalUrl;
   };
 
   if (loading) {
@@ -123,9 +128,9 @@ const Subscribe = () => {
                 className="w-full"
                 variant="regulus"
                 onClick={() => handleSubscribe('ghost_premium')}
-                disabled={hasActiveSubscription}
+                disabled={hasActiveSubscription && subscription?.tier === 'ghost_premium'}
               >
-                {hasActiveSubscription && subscription?.tier === 'ghost_premium' ? 'Current Plan' : 'Coming Soon'}
+                {hasActiveSubscription && subscription?.tier === 'ghost_premium' ? 'Current Plan' : 'Subscribe Now'}
               </Button>
             </CardContent>
           </Card>
@@ -160,16 +165,16 @@ const Subscribe = () => {
                 className="w-full"
                 variant="regulus"
                 onClick={() => handleSubscribe('regulus_premium')}
-                disabled={hasActiveSubscription}
+                disabled={hasActiveSubscription && subscription?.tier === 'regulus_premium'}
               >
-                {hasActiveSubscription && subscription?.tier === 'regulus_premium' ? 'Current Plan' : 'Coming Soon'}
+                {hasActiveSubscription && subscription?.tier === 'regulus_premium' ? 'Current Plan' : 'Subscribe Now'}
               </Button>
             </CardContent>
           </Card>
         )}
 
         <p className="text-xs text-center text-muted-foreground px-4">
-          Premium subscriptions coming soon. Stay tuned for updates!
+          Subscriptions are billed monthly via PayPal. Cancel anytime from your PayPal account.
         </p>
       </main>
     </div>
