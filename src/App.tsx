@@ -16,7 +16,7 @@ import Chat from "./pages/Chat";
 import Capture from "./pages/Capture";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
-import Subscribe from "./pages/Subscribe";
+
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
 import NotFound from "./pages/NotFound";
@@ -40,7 +40,7 @@ const App = () => (
             <Route path="/capture" element={<ProtectedRoute><Capture /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
-            <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
+            
             <Route path="/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
             <Route path="/community/:id" element={<ProtectedRoute><CommunityDetail /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
