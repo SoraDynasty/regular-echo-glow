@@ -2,9 +2,21 @@ import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { X, Camera as CameraIcon, FlipHorizontal, Check } from "lucide-react";
+import { X, Camera as CameraIcon, FlipHorizontal, Check, Users } from "lucide-react";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Community {
+  id: string;
+  name: string;
+}
 
 const Capture = () => {
   const navigate = useNavigate();
@@ -14,17 +26,41 @@ const Capture = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [isUploading, setIsUploading] = useState(false);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [selectedCommunity, setSelectedCommunity] = useState<string>("none");
 
   useEffect(() => {
     startCamera();
+    loadUserCommunities();
     return () => {
       stopCamera();
     };
   }, [facingMode]);
 
+  const loadUserCommunities = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: memberships, error } = await supabase
+        .from("community_members")
+        .select("community_id, communities(id, name)")
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+
+      const userCommunities = memberships
+        ?.map((m: any) => m.communities)
+        .filter(Boolean) as Community[];
+      
+      setCommunities(userCommunities || []);
+    } catch (error) {
+      console.error("Failed to load communities:", error);
+    }
+  };
+
   const startCamera = async () => {
     try {
-      // Stop existing stream if any
       stopCamera();
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -81,6 +117,7 @@ const Capture = () => {
   const retake = () => {
     haptics.light();
     setCapturedImage(null);
+    setSelectedCommunity("none");
     startCamera();
   };
 
@@ -118,19 +155,38 @@ const Capture = () => {
         .getPublicUrl(fileName);
 
       // Create post
-      const { error: postError } = await supabase
+      const { data: postData, error: postError } = await supabase
         .from("posts")
         .insert({
           user_id: session.user.id,
           front_media_url: publicUrl,
           post_type: "photo",
           caption: ""
-        });
+        })
+        .select()
+        .single();
 
       if (postError) throw postError;
 
+      // If a community is selected, also add to community_posts
+      if (selectedCommunity && selectedCommunity !== "none" && postData) {
+        const { error: communityPostError } = await supabase
+          .from("community_posts")
+          .insert({
+            community_id: selectedCommunity,
+            post_id: postData.id
+          });
+
+        if (communityPostError) {
+          console.error("Failed to add post to community:", communityPostError);
+          // Don't throw - the main post was created successfully
+        }
+      }
+
       haptics.success();
-      toast.success("Posted! ✨");
+      toast.success(selectedCommunity && selectedCommunity !== "none" 
+        ? "Posted to community! ✨" 
+        : "Posted! ✨");
       navigate("/feed");
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -198,6 +254,31 @@ const Capture = () => {
             alt="Captured"
             className="absolute inset-0 w-full h-full object-cover"
           />
+          
+          {/* Community Selector */}
+          {communities.length > 0 && (
+            <div className="absolute top-0 left-0 right-0 safe-area-top p-4 z-10">
+              <div className="bg-black/70 backdrop-blur-sm rounded-2xl p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="w-4 h-4 text-white" />
+                  <span className="text-white text-sm font-medium">Post to community</span>
+                </div>
+                <Select value={selectedCommunity} onValueChange={setSelectedCommunity}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Select community (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No community (feed only)</SelectItem>
+                    {communities.map((community) => (
+                      <SelectItem key={community.id} value={community.id}>
+                        {community.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
           
           {/* Bottom Controls */}
           <div className="absolute bottom-0 left-0 right-0 safe-area-bottom p-6 flex gap-4 justify-center">

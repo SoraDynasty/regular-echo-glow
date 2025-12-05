@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./hooks/use-theme";
-import RayFloatingIcon from "./components/Ray/RayFloatingIcon";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -16,7 +15,6 @@ import Chat from "./pages/Chat";
 import Capture from "./pages/Capture";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
-
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
 import NotFound from "./pages/NotFound";
@@ -40,13 +38,11 @@ const App = () => (
             <Route path="/capture" element={<ProtectedRoute><Capture /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
-            
             <Route path="/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
             <Route path="/community/:id" element={<ProtectedRoute><CommunityDetail /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <RayFloatingIcon />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

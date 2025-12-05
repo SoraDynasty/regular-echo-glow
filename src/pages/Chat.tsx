@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import MobileNav from "@/components/MobileNav";
+import EllieFloatingIcon from "@/components/Ellie/EllieFloatingIcon";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
@@ -35,7 +36,6 @@ const Chat = () => {
   const loadFriends = async (userId: string) => {
     setLoading(true);
     try {
-      // Get users that the current user is following
       const { data: follows, error: followsError } = await supabase
         .from("follows")
         .select("following_id")
@@ -46,7 +46,6 @@ const Chat = () => {
       if (follows && follows.length > 0) {
         const followingIds = follows.map(f => f.following_id);
         
-        // Get profiles of followed users
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("*")
@@ -134,6 +133,9 @@ const Chat = () => {
       </main>
 
       <MobileNav />
+      
+      {/* Ellie AI - Only shows on Chat page */}
+      <EllieFloatingIcon />
     </div>
   );
 };
