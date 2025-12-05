@@ -1,30 +1,29 @@
 import { useState, useEffect } from "react";
-import { Send, X } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import RayChat from "./RayChat";
+import EllieChat from "./EllieChat";
 import { haptics } from "@/lib/haptics";
 import { supabase } from "@/integrations/supabase/client";
 
-type RayState = "idle" | "listening" | "cooking" | "responding" | "recording" | "transcribing" | "speaking";
+type EllieState = "idle" | "listening" | "cooking" | "responding" | "recording" | "transcribing" | "speaking";
 
-const RayFloatingIcon = () => {
+const EllieFloatingIcon = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [rayState, setRayState] = useState<RayState>("idle");
+  const [ellieState, setEllieState] = useState<EllieState>("idle");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check authentication status
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
   const handleOpen = () => {
     if (!isOpen) {
       haptics.light();
@@ -36,31 +35,34 @@ const RayFloatingIcon = () => {
     haptics.light();
     setIsOpen(false);
   };
+
   const getGlowClass = () => {
-    switch (rayState) {
+    switch (ellieState) {
       case "idle":
-        return "ray-idle";
+        return "ellie-idle";
       case "listening":
-        return "ray-listening";
+        return "ellie-listening";
       case "recording":
-        return "ray-listening"; // Same effect for recording
+        return "ellie-listening";
       case "transcribing":
-        return "ray-cooking"; // Show cooking state while transcribing
+        return "ellie-cooking";
       case "cooking":
-        return "ray-cooking";
+        return "ellie-cooking";
       case "responding":
-        return "ray-responding";
+        return "ellie-responding";
       case "speaking":
-        return "ray-responding"; // Same effect for speaking
+        return "ellie-responding";
       default:
-        return "ray-idle";
+        return "ellie-idle";
     }
   };
+
   if (!isAuthenticated) {
     return null;
   }
 
-  return <>
+  return (
+    <>
       {/* Floating Icon - only show when chat is closed */}
       {!isOpen && (
         <div className="fixed bottom-28 right-6 z-50">
@@ -75,11 +77,15 @@ const RayFloatingIcon = () => {
       )}
 
       {/* Chat Overlay */}
-      {isOpen && <div className="fixed inset-0 z-40 flex items-end justify-center p-4 pb-24 pointer-events-none">
+      {isOpen && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center p-4 pb-24 pointer-events-none">
           <div className="w-full max-w-md pointer-events-auto animate-fade-in">
-            <RayChat onClose={handleClose} onStateChange={setRayState} />
+            <EllieChat onClose={handleClose} onStateChange={setEllieState} />
           </div>
-        </div>}
-    </>;
+        </div>
+      )}
+    </>
+  );
 };
-export default RayFloatingIcon;
+
+export default EllieFloatingIcon;

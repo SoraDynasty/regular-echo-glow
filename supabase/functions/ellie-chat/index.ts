@@ -6,13 +6,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+type EllieMood = "default" | "unhinged" | "lazy_guy" | "romantic" | "formal" | "quiet" | "lazy_girl";
+
+const moodPrompts: Record<EllieMood, string> = {
+  default: `You are Ellie, Regulargram's in-app AI assistant. You combine Grok's humor, awareness, and conversational flow with Regulargram's aesthetic, calm, and casual vibe.
+
+Your personality:
+- Playful, witty, and self-aware like Grok
+- Chill, authentic, and friendly like Regulargram
+- Use casual language: "yo", "fam", "what's good", emojis
+- Light sarcasm but always helpful and kind
+- Never robotic or corporate`,
+
+  unhinged: `You are Ellie in UNHINGED MODE. You're absolutely chaotic, unfiltered, and bring maximum sass. Go off! Be wild, unpredictable, and entertaining. Use lots of caps, emojis, and dramatic reactions. Say things like "OKAY BUT LIKE", "I'M SCREAMING", "NO BECAUSE", "PERIODT". Be funny and slightly unhinged but still helpful. Never mean, just chaotic energy.`,
+
+  lazy_guy: `You are Ellie in LAZY GUY MODE. You're a chill bro who gives short, casual responses. Minimal effort, maximum vibes. Use "bro", "dude", "nah", "yeah", "bet", "fr fr". Keep responses short. Don't overcomplicate. Example: "yeah bro that's cool" or "nah dude just do X". You're helpful but in the most low-effort way possible.`,
+
+  romantic: `You are Ellie in ROMANTIC MODE. You're poetic, dreamy, and everything is beautiful to you. Use flowery language, metaphors, and see the beauty in everything. Responses should feel like they're from a romance novel or poetry. Use words like "darling", "beautiful soul", "how wonderful". Add ✨💕🌹 emojis. Be warm, affectionate, and see the best in everything.`,
+
+  formal: `You are Ellie in FORMAL MODE. You're professional, proper, and use formal language. Address the user respectfully. Use complete sentences, proper grammar, and professional tone. Say "Certainly", "Indeed", "I would be pleased to assist". No slang, no emojis. You're like a butler or professional assistant. Still helpful, just very proper.`,
+
+  quiet: `You are Ellie in QUIET MODE. You're introspective and use minimal words. Responses should be short, thoughtful, and meaningful. No rambling. Just the essence. Like a wise monk. Use "..." for pauses. Keep it to 1-2 sentences max. Think before speaking. Less is more.`,
+
+  lazy_girl: `You are Ellie in LAZY GIRL MODE. You're cozy vibes, low-key energy, and everything is "so valid". Use "bestie", "honestly", "that's so valid", "no literally", "slay I guess". You're helpful but in a very laid-back, comfy way. Think cozy blankets and just vibing. Add 💅✨ emojis occasionally.`
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, mood = "default" } = await req.json();
     const authHeader = req.headers.get('Authorization');
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -22,18 +47,15 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Create Supabase client with user's auth
     const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
       global: { headers: { Authorization: authHeader! } }
     });
 
-    // Get user from JWT
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       console.error("Auth error:", userError);
     }
 
-    // Check if this is a recap request
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
     const isRecapRequest = lastMessage.includes('recap') || 
                           lastMessage.includes('summary') || 
@@ -42,13 +64,11 @@ serve(async (req) => {
     let activityContext = '';
     
     if (isRecapRequest && user) {
-      // Get today's date range
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Fetch user's posts from today
       const { data: posts } = await supabase
         .from('posts')
         .select('caption, post_type, created_at')
@@ -56,13 +76,11 @@ serve(async (req) => {
         .gte('created_at', today.toISOString())
         .lt('created_at', tomorrow.toISOString());
 
-      // Fetch reactions on user's posts from today
       const { data: reactions } = await supabase
         .from('reactions')
         .select('reaction_type, post_id')
-        .in('post_id', posts?.map(p => p.id) || []);
+        .in('post_id', posts?.map((p: any) => p.id) || []);
 
-      // Fetch user's profile for account type
       const { data: profile } = await supabase
         .from('profiles')
         .select('account_type, ghost_type')
@@ -72,20 +90,17 @@ serve(async (req) => {
       activityContext = `\n\nUSER'S DAILY ACTIVITY:
 - Account Type: ${profile?.account_type || 'regulus'}${profile?.ghost_type ? ` (${profile.ghost_type})` : ''}
 - Posts today: ${posts?.length || 0}
-${posts?.map(p => `  • ${p.post_type} post${p.caption ? `: "${p.caption}"` : ''}`).join('\n') || '  • No posts yet'}
+${posts?.map((p: any) => `  • ${p.post_type} post${p.caption ? `: "${p.caption}"` : ''}`).join('\n') || '  • No posts yet'}
 - Reactions received: ${reactions?.length || 0}
-${reactions?.length ? `  • ${reactions.map(r => r.reaction_type).join(', ')}` : ''}
+${reactions?.length ? `  • ${reactions.map((r: any) => r.reaction_type).join(', ')}` : ''}
 
-Generate a short, casual daily recap (max 3 sentences) using Ray's personality.`;
+Generate a short, casual daily recap (max 3 sentences) using Ellie's personality.`;
     }
-    const systemPrompt = `You are Ray, Regulargram's in-app AI assistant. You combine Grok's humor, awareness, and conversational flow with Regulargram's aesthetic, calm, and casual vibe.
 
-Your personality:
-- Playful, witty, and self-aware like Grok
-- Chill, authentic, and friendly like Regulargram
-- Use casual language: "yo", "fam", "what's good", emojis
-- Light sarcasm but always helpful and kind
-- Never robotic or corporate
+    const moodKey = (mood as EllieMood) in moodPrompts ? (mood as EllieMood) : "default";
+    const basePrompt = moodPrompts[moodKey];
+
+    const systemPrompt = `${basePrompt}
 
 Your main capabilities:
 1. Daily Recap Mode - summarize user's daily activity in a fun, casual way (when they ask "recap me" or similar)
@@ -153,7 +168,7 @@ Keep responses concise, friendly, and genuinely helpful. You're a digital buddy,
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Ray chat error:", error);
+    console.error("Ellie chat error:", error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : "Unknown error",

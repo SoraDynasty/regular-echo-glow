@@ -168,8 +168,8 @@ All colors MUST be HSL.
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Ray AI Assistant Animations */
-  @keyframes ray-pulse {
+  /* Ellie AI Assistant Animations */
+  @keyframes ellie-pulse {
     0%, 100% {
       box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
       transform: scale(1);
@@ -180,7 +180,7 @@ All colors MUST be HSL.
     }
   }
 
-  @keyframes ray-cooking-pulse {
+  @keyframes ellie-cooking-pulse {
     0%, 100% {
       box-shadow: 0 0 30px hsl(280 100% 70% / 0.4);
       transform: scale(1);
@@ -200,28 +200,28 @@ All colors MUST be HSL.
     }
   }
 
-  .ray-idle {
+  .ellie-idle {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)) / 0.8);
     box-shadow: 0 0 15px hsl(var(--primary) / 0.3);
   }
 
-  .ray-listening {
+  .ellie-listening {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)));
-    animation: ray-pulse 2s ease-in-out infinite;
+    animation: ellie-pulse 2s ease-in-out infinite;
   }
 
-  .ray-cooking {
+  .ellie-cooking {
     background: linear-gradient(135deg, hsl(280 100% 70%), hsl(250 100% 70%));
-    animation: ray-cooking-pulse 1.5s ease-in-out infinite;
+    animation: ellie-cooking-pulse 1.5s ease-in-out infinite;
   }
 
-  .ray-responding {
+  .ellie-responding {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)));
     box-shadow: 0 0 25px hsl(var(--primary) / 0.5);
     transition: all 0.3s ease;
   }
 
-  .ray-cooking-text {
+  .ellie-cooking-text {
     animation: cooking-text 1.5s ease-in-out infinite;
   }
 }
