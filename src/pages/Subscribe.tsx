@@ -54,9 +54,8 @@ const premiumFeatures = [
 const Subscribe = () => {
   const navigate = useNavigate();
 
-  const handleSubscribe = async () => {
-    // TODO: Implement Lemon Squeezy checkout
-    console.log("Opening checkout...");
+  const handleSubscribe = () => {
+    window.open("https://regulargram.lemonsqueezy.com/buy/bf74052a-6a77-479a-a893-52ec2fe2fd04", "_blank");
   };
 
   return (

@@ -91,7 +91,7 @@ const Profile = () => {
       <header className="safe-area-top px-4 py-4 flex items-center justify-between">
         <div className="flex-1" />
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/edit-profile")} className="rounded-full">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="rounded-full">
             <Settings className="w-6 h-6" />
           </Button>
         </div>
