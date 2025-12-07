@@ -157,12 +157,21 @@ const Feed = () => {
         {loading ? (
           <LoadingAnimation />
         ) : posts.length === 0 ? (
-          <div className="text-center py-12 glass-card rounded-2xl p-6">
-            <Camera className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg md:text-xl font-semibold mb-2">No posts yet</h3>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Be the first to share your authentic moment!
+          <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+            <h3 className="text-xl md:text-2xl font-semibold mb-3">
+              Wow, it's really calm in here!
+            </h3>
+            <p className="text-muted-foreground mb-8 max-w-xs">
+              Your friends haven't posted their Regular yet. Be the first one.
             </p>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate("/capture")}
+              className="rounded-full px-8 py-6 text-base font-medium border-2"
+            >
+              Capture your Regular.
+            </Button>
           </div>
         ) : (
           <div className="space-y-4 md:space-y-6">

@@ -1,4 +1,4 @@
-import { Home, Users, Camera, Send, User, UsersRound } from "lucide-react";
+import { Home, Users, Camera, Send, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ const MobileNav = () => {
 
   const navItems = [
     { icon: Home, label: "Home", path: "/feed" },
-    { icon: UsersRound, label: "Groups", path: "/communities" },
+    { icon: Users, label: "Friends", path: "/friends" },
     { icon: Camera, label: "", path: "/capture", isCenter: true },
     { icon: Send, label: "Chat", path: "/chat" },
     { icon: User, label: "Profile", path: "/profile" },
