@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Settings, Users, ImageIcon, Lock, Globe, Loader2, LogOut } from "lucide-react";
+import { ArrowLeft, Settings, Users, ImageIcon, Lock, Globe, Loader2, LogOut, MessageCircle } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import { useToast } from "@/hooks/use-toast";
 import PostCard from "@/components/PostCard";
-
+import CommunityChat from "@/components/Communities/CommunityChat";
 interface Community {
   id: string;
   name: string;
@@ -314,8 +314,12 @@ const CommunityDetail = () => {
 
       {/* Tabs */}
       <div className="mt-6">
-        <Tabs defaultValue="posts">
+        <Tabs defaultValue="chat">
           <TabsList className="w-full justify-start px-4 bg-transparent">
+            <TabsTrigger value="chat" className="gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Chat
+            </TabsTrigger>
             <TabsTrigger value="posts" className="gap-2">
               <ImageIcon className="w-4 h-4" />
               Posts
@@ -325,6 +329,19 @@ const CommunityDetail = () => {
               Members
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="chat" className="mt-0">
+            {userMembership ? (
+              <CommunityChat communityId={id!} userId={user.id} />
+            ) : (
+              <Card className="mx-4 glass-card">
+                <CardContent className="p-8 text-center">
+                  <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Join the community to chat</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
           <TabsContent value="posts" className="px-4 mt-4">
             {posts.length === 0 ? (
