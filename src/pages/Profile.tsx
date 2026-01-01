@@ -144,10 +144,14 @@ const Profile = () => {
           {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
         </p>
 
-        {/* Stats */}
+        {/* Stats - Ghost accounts (ghost, observer, echo) show 0 followers */}
         <div className="flex justify-center gap-12 mb-6">
-          
-          
+          {profile.account_type === "regulus" && (
+            <div className="text-center">
+              <div className="text-2xl font-bold">{followersCount}</div>
+              <div className="text-xs text-muted-foreground">Followers</div>
+            </div>
+          )}
           <div className="text-center">
             <div className="text-2xl font-bold">{followingCount}</div>
             <div className="text-xs text-muted-foreground">Following</div>
