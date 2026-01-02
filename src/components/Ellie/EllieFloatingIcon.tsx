@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EllieChat from "./EllieChat";
 import { haptics } from "@/lib/haptics";
@@ -41,15 +41,12 @@ const EllieFloatingIcon = () => {
       case "idle":
         return "ellie-idle";
       case "listening":
-        return "ellie-listening";
       case "recording":
         return "ellie-listening";
       case "transcribing":
-        return "ellie-cooking";
       case "cooking":
         return "ellie-cooking";
       case "responding":
-        return "ellie-responding";
       case "speaking":
         return "ellie-responding";
       default:
@@ -69,20 +66,16 @@ const EllieFloatingIcon = () => {
           <Button
             onClick={handleOpen}
             size="icon"
-            className={`w-14 h-14 rounded-full shadow-lg ${getGlowClass()} transition-all duration-300`}
+            className={`w-14 h-14 rounded-full shadow-lg ${getGlowClass()} transition-all duration-300 bg-gradient-to-br from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90`}
           >
-            <Send className="w-6 h-6" />
+            <Sparkles className="w-6 h-6 text-white" />
           </Button>
         </div>
       )}
 
-      {/* Chat Overlay */}
+      {/* Fullscreen Chat */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center p-4 pb-24 pointer-events-none">
-          <div className="w-full max-w-md pointer-events-auto animate-fade-in">
-            <EllieChat onClose={handleClose} onStateChange={setEllieState} />
-          </div>
-        </div>
+        <EllieChat onClose={handleClose} onStateChange={setEllieState} />
       )}
     </>
   );

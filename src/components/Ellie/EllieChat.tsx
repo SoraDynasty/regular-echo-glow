@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles } from "lucide-react";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,19 +32,17 @@ const moodConfig: Record<EllieMood, { label: string; emoji: string; color: strin
   lazy_girl: { label: "Lazy Girl", emoji: "💅", color: "bg-orange-400" },
 };
 
-const cookingMessages = [
-  "Hang tight fam, I'm cooking this up 👀",
-  "One sec… seasoning the answer 🔥",
-  "Cooking something fresh for you 🍳",
-  "Ellie is cooking 🍳",
-  "Cooking something up…"
+const quickPrompts = [
+  { icon: Code, label: "Write code", prompt: "Help me write code for " },
+  { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas for " },
+  { icon: FileText, label: "Write content", prompt: "Help me write " },
+  { icon: Palette, label: "Design ideas", prompt: "Give me design ideas for " },
+  { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
+  { icon: Globe, label: "Research", prompt: "Research and explain " },
 ];
 
 const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([{
-    role: "assistant",
-    content: "Yo! I'm Ellie, your Regulargram buddy 👋 What's good? Need help posting, understanding modes, or just wanna chat?"
-  }]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -54,6 +52,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -68,16 +67,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     };
   }, []);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-    const userMessage = input.trim();
+  const sendMessage = async (messageText?: string) => {
+    const userMessage = messageText || input.trim();
+    if (!userMessage || isLoading) return;
+    
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
     onStateChange("cooking");
-    
-    const cookingMsg = cookingMessages[Math.floor(Math.random() * cookingMessages.length)];
-    setMessages(prev => [...prev, { role: "assistant", content: cookingMsg }]);
 
     try {
       const { data, error } = await supabase.functions.invoke("ellie-chat", {
@@ -90,19 +87,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
       if (error) throw error;
 
       onStateChange("responding");
-      setMessages(prev => {
-        const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = { role: "assistant", content: data.message };
-        return newMessages;
-      });
+      setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
 
       if (data.message) {
         await generateSpeech(data.message);
       }
     } catch (error) {
       console.error("Ellie chat error:", error);
-      toast.error("Yo, something went wrong. Try again?");
-      setMessages(prev => prev.slice(0, -1));
+      toast.error("Something went wrong. Try again?");
     } finally {
       setIsLoading(false);
       onStateChange("idle");
@@ -159,40 +151,12 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
       if (error) throw error;
 
       if (data.text) {
-        setInput(data.text);
-        const userMessage = data.text;
-        setInput("");
-        setMessages(prev => [...prev, { role: "user", content: userMessage }]);
-        setIsLoading(true);
-        onStateChange("cooking");
-        
-        const cookingMsg = cookingMessages[Math.floor(Math.random() * cookingMessages.length)];
-        setMessages(prev => [...prev, { role: "assistant", content: cookingMsg }]);
-
-        const { data: chatData, error: chatError } = await supabase.functions.invoke("ellie-chat", {
-          body: {
-            messages: [...messages, { role: "user", content: userMessage }],
-            mood
-          }
-        });
-
-        if (chatError) throw chatError;
-
-        onStateChange("responding");
-        setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1] = { role: "assistant", content: chatData.message };
-          return newMessages;
-        });
-
-        await generateSpeech(chatData.message);
+        await sendMessage(data.text);
       }
     } catch (error) {
       console.error("Transcription error:", error);
       toast.error("Couldn't transcribe audio");
       onStateChange("idle");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -202,30 +166,76 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     onStateChange("idle");
   };
 
+  const handleQuickPrompt = (prompt: string) => {
+    setInput(prompt);
+    inputRef.current?.focus();
+  };
+
   const currentMood = moodConfig[mood];
 
+  const renderMessageContent = (content: string) => {
+    // Parse code blocks
+    const parts = content.split(/(```[\s\S]*?```)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("```")) {
+        const lines = part.slice(3, -3).split("\n");
+        const language = lines[0] || "code";
+        const code = lines.slice(1).join("\n");
+        return (
+          <div key={i} className="my-3 rounded-xl overflow-hidden bg-black/50">
+            <div className="flex items-center justify-between px-4 py-2 bg-black/30 text-xs text-muted-foreground">
+              <span>{language}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(code);
+                  toast.success("Copied!");
+                }}
+                className="hover:text-foreground transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+            <pre className="p-4 overflow-x-auto text-sm">
+              <code>{code}</code>
+            </pre>
+          </div>
+        );
+      }
+      return <span key={i} className="whitespace-pre-wrap">{part}</span>;
+    });
+  };
+
   return (
-    <div className="bg-background/95 backdrop-blur-xl border border-border rounded-3xl shadow-2xl overflow-hidden h-[500px] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/10 to-purple-500/10 relative">
-        <div className="flex items-center gap-2">
-          <h3 className="font-bold text-lg">Ellie</h3>
+      <header className="safe-area-top px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          
+          <div className="flex-1 flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg">Ellie</h1>
+              <p className="text-xs text-muted-foreground">Your AI assistant</p>
+            </div>
+          </div>
+          
           <button
             onClick={() => setShowMoodSelector(!showMoodSelector)}
-            className={`text-xs px-2 py-1 rounded-full ${currentMood.color} text-white flex items-center gap-1`}
+            className={`text-xs px-3 py-1.5 rounded-full ${currentMood.color} text-white flex items-center gap-1`}
           >
             {currentMood.emoji} {currentMood.label}
           </button>
         </div>
-        <p className="text-xs text-muted-foreground">Your Regulargram AI buddy</p>
-        <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2 rounded-full w-8 h-8">
-          <X className="w-4 h-4" />
-        </Button>
         
         {/* Mood Selector */}
         {showMoodSelector && (
-          <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border border-border rounded-2xl p-2 mt-2 z-50 mx-2 shadow-xl">
-            <div className="grid grid-cols-4 gap-1">
+          <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border p-3 z-50">
+            <div className="grid grid-cols-4 gap-2 max-w-md mx-auto">
               {(Object.keys(moodConfig) as EllieMood[]).map((m) => (
                 <button
                   key={m}
@@ -234,63 +244,119 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
                     setShowMoodSelector(false);
                     haptics.light();
                   }}
-                  className={`p-2 rounded-xl text-center transition-all ${
+                  className={`p-3 rounded-xl text-center transition-all ${
                     mood === m ? "bg-primary/20 ring-2 ring-primary" : "hover:bg-muted"
                   }`}
                 >
-                  <span className="text-lg">{moodConfig[m].emoji}</span>
-                  <p className="text-[10px] mt-1">{moodConfig[m].label}</p>
+                  <span className="text-xl">{moodConfig[m].emoji}</span>
+                  <p className="text-xs mt-1">{moodConfig[m].label}</p>
                 </button>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </header>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                msg.role === "user" 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-muted text-foreground"
-              } ${isLoading && idx === messages.length - 1 && msg.role === "assistant" ? "ellie-cooking-text" : ""}`}>
-                <p className="text-sm">{msg.content}</p>
+      <ScrollArea className="flex-1 px-4" ref={scrollRef}>
+        <div className="max-w-3xl mx-auto py-6">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center mb-6">
+                <Sparkles className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Hey there! I'm Ellie</h2>
+              <p className="text-muted-foreground mb-8 max-w-md">
+                Your powerful AI assistant. I can write code, brainstorm ideas, solve problems, create content, and so much more.
+              </p>
+              
+              {/* Quick Prompts */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-lg">
+                {quickPrompts.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleQuickPrompt(item.prompt)}
+                    className="flex items-center gap-2 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors text-left"
+                  >
+                    <item.icon className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-6">
+              {messages.map((msg, idx) => (
+                <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] ${msg.role === "user" ? "" : "w-full"}`}>
+                    {msg.role === "assistant" && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                          <Sparkles className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="text-sm font-medium">Ellie</span>
+                      </div>
+                    )}
+                    <div className={`rounded-2xl px-4 py-3 ${
+                      msg.role === "user" 
+                        ? "bg-primary text-primary-foreground" 
+                        : "bg-muted"
+                    }`}>
+                      <div className="text-sm leading-relaxed">
+                        {msg.role === "assistant" ? renderMessageContent(msg.content) : msg.content}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+                      <Sparkles className="w-3 h-3 text-white animate-pulse" />
+                    </div>
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border/50">
-        <div className="flex gap-2">
+      <div className="safe-area-bottom px-4 py-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
+        <div className="max-w-3xl mx-auto flex gap-2">
           <Input
+            ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyPress={e => e.key === "Enter" && !isRecording && sendMessage()}
-            placeholder={isRecording ? "Listening..." : "Ask Ellie anything..."}
-            className="rounded-full"
+            placeholder={isRecording ? "Listening..." : "Ask me anything..."}
+            className="rounded-full h-12 text-base"
             disabled={isLoading || isRecording}
           />
           
           {isSpeaking ? (
-            <Button onClick={stopSpeaking} size="icon" className="rounded-full bg-red-500 hover:bg-red-600">
-              <Volume2 className="w-4 h-4 animate-pulse" />
+            <Button onClick={stopSpeaking} size="icon" className="rounded-full w-12 h-12 bg-red-500 hover:bg-red-600">
+              <Volume2 className="w-5 h-5 animate-pulse" />
             </Button>
           ) : isRecording ? (
-            <Button onClick={stopRecording} size="icon" className="rounded-full bg-red-500 hover:bg-red-600 animate-pulse">
-              <Square className="w-4 h-4" />
+            <Button onClick={stopRecording} size="icon" className="rounded-full w-12 h-12 bg-red-500 hover:bg-red-600 animate-pulse">
+              <Square className="w-5 h-5" />
             </Button>
           ) : (
             <>
-              <Button onClick={startRecording} disabled={isLoading} size="icon" className="rounded-full" variant="outline">
-                <Mic className="w-4 h-4" />
+              <Button onClick={startRecording} disabled={isLoading} size="icon" className="rounded-full w-12 h-12" variant="outline">
+                <Mic className="w-5 h-5" />
               </Button>
-              <Button onClick={sendMessage} disabled={isLoading || !input.trim()} size="icon" className="rounded-full">
-                <Send className="w-4 h-4" />
+              <Button onClick={() => sendMessage()} disabled={isLoading || !input.trim()} size="icon" className="rounded-full w-12 h-12">
+                <Send className="w-5 h-5" />
               </Button>
             </>
           )}
