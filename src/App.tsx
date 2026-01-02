@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Feed from "./pages/Feed";
 import Friends from "./pages/Friends";
 import Chat from "./pages/Chat";
+import DirectMessage from "./pages/DirectMessage";
 import Capture from "./pages/Capture";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/dm/:recipientId" element={<ProtectedRoute><DirectMessage /></ProtectedRoute>} />
             <Route path="/capture" element={<ProtectedRoute><Capture /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
