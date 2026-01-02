@@ -75,7 +75,6 @@ const Friends = () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("account_type", "regulus")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
