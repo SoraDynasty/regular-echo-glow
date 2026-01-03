@@ -166,25 +166,28 @@ const Chat = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen min-h-dvh bg-background">
       {/* Header */}
-      <header className="safe-area-top px-4 py-4 border-b border-border/50">
-        <h1 className="text-2xl font-bold text-center mb-4">Messages</h1>
-        
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12 rounded-2xl"
-          />
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
+        <div className="safe-area-top" />
+        <div className="px-4 py-3">
+          <h1 className="text-2xl font-bold text-center mb-3">Messages</h1>
+          
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11 rounded-xl"
+            />
+          </div>
         </div>
       </header>
 
-      <main className="px-4 py-6">
+      <main className="px-4 py-4 pb-28">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />

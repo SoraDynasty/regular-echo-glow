@@ -84,10 +84,11 @@ const Feed = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0" {...swipeHandlers}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass-card border-b border-border/50 backdrop-blur-xl safe-area-top">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+    <div className="min-h-screen min-h-dvh bg-background" {...swipeHandlers}>
+      {/* Header - extends behind status bar */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/30">
+        <div className="safe-area-top" />
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-bold text-glow-regulus">Regulargram</h1>
           
           <div className="flex items-center gap-2 md:gap-3">
@@ -136,7 +137,7 @@ const Feed = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">
         {/* Create Post Button - Hidden on mobile, shown on desktop */}
         <div className="mb-6 md:mb-8 text-center hidden md:block">
           <Button

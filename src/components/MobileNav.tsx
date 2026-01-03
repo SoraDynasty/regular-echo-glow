@@ -1,6 +1,5 @@
 import { Home, Users, Camera, Send, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { haptics } from "@/lib/haptics";
 
@@ -9,8 +8,10 @@ const MobileNav = () => {
   const location = useLocation();
 
   const handleNavigate = (path: string) => {
-    haptics.light();
-    navigate(path);
+    if (location.pathname !== path) {
+      haptics.light();
+      navigate(path);
+    }
   };
 
   const navItems = [
@@ -22,41 +23,40 @@ const MobileNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/50 safe-area-bottom md:hidden">
-      <div className="flex items-center justify-around h-20 px-2">
-        {navItems.map(({ icon: Icon, label, path, isCenter }) => {
-          const isActive = location.pathname === path;
-          
-          if (isCenter) {
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+      {/* Background extends to screen edge, content respects safe area */}
+      <div className="bg-background/95 backdrop-blur-xl border-t border-border/30">
+        <div className="flex items-center justify-around h-16 px-2 safe-area-bottom">
+          {navItems.map(({ icon: Icon, label, path, isCenter }) => {
+            const isActive = location.pathname === path;
+            
+            if (isCenter) {
+              return (
+                <button
+                  key={path}
+                  onClick={() => handleNavigate(path)}
+                  className="flex items-center justify-center h-14 w-14 rounded-full bg-foreground text-background -mt-6 shadow-lg active:scale-95 transition-transform duration-150"
+                >
+                  <Icon className="w-7 h-7" />
+                </button>
+              );
+            }
+            
             return (
-              <Button
+              <button
                 key={path}
-                variant="ghost"
-                size="icon"
                 onClick={() => handleNavigate(path)}
-                className="h-16 w-16 rounded-2xl bg-foreground text-background hover:bg-foreground/90 -mt-4"
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 h-12 w-14 rounded-xl transition-all duration-200 active:scale-95",
+                  isActive ? "text-foreground" : "text-muted-foreground"
+                )}
               >
-                <Icon className="w-8 h-8" />
-              </Button>
+                <Icon className={cn("w-6 h-6 transition-transform duration-200", isActive && "scale-110")} />
+                <span className="text-[10px] font-medium">{label}</span>
+              </button>
             );
-          }
-          
-          return (
-            <Button
-              key={path}
-              variant="ghost"
-              size="icon"
-              onClick={() => handleNavigate(path)}
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 h-16 w-16 rounded-xl transition-all",
-                isActive ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              <Icon className="w-6 h-6" />
-              <span className="text-[9px] font-medium">{label}</span>
-            </Button>
-          );
-        })}
+          })}
+        </div>
       </div>
     </nav>
   );
