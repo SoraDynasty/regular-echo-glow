@@ -168,8 +168,9 @@ const DirectMessage = () => {
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
-      <header className="safe-area-top px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
+      <header className="bg-background/95 backdrop-blur-xl border-b border-border/30">
+        <div className="safe-area-top" />
+        <div className="px-4 py-3 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/chat")} className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -219,7 +220,8 @@ const DirectMessage = () => {
       </ScrollArea>
 
       {/* Input */}
-      <div className="safe-area-bottom px-4 py-4 border-t border-border/50 bg-background/95 backdrop-blur-xl">
+      <div className="bg-background/95 backdrop-blur-xl border-t border-border/30">
+        <div className="px-4 py-3 safe-area-bottom">
         <div className="max-w-2xl mx-auto flex gap-2">
           <Input
             value={input}
@@ -237,6 +239,7 @@ const DirectMessage = () => {
           >
             <Send className="w-5 h-5" />
           </Button>
+        </div>
         </div>
       </div>
     </div>

@@ -86,19 +86,22 @@ const Profile = () => {
         <LoadingAnimation />
       </div>;
   }
-  return <div className="min-h-screen bg-background pb-24">
+  return <div className="min-h-screen min-h-dvh bg-background">
       {/* Header */}
-      <header className="safe-area-top px-4 py-4 flex items-center justify-between">
-        <div className="flex-1" />
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="rounded-full">
-            <Settings className="w-6 h-6" />
-          </Button>
+      <header className="bg-background/95 backdrop-blur-xl">
+        <div className="safe-area-top" />
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex-1" />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")} className="rounded-full">
+              <Settings className="w-6 h-6" />
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Profile Content */}
-      <main className="px-4 pb-6">
+      <main className="px-4 pb-28">
         {/* Profile Picture */}
         <div className="flex justify-center mb-4">
           <div className={`w-32 h-32 rounded-full flex items-center justify-center border-4 border-border overflow-hidden ${profile.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"}`}>
