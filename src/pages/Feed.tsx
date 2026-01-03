@@ -176,7 +176,13 @@ const Feed = () => {
         ) : (
           <div className="space-y-4 md:space-y-6">
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} onReaction={loadFeed} />
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                onReaction={loadFeed}
+                onPostDeleted={loadFeed}
+                onPostUpdated={loadFeed}
+              />
             ))}
           </div>
         )}
