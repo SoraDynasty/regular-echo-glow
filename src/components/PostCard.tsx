@@ -1,13 +1,37 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Eye, Flame } from "lucide-react";
+import { Heart, MessageCircle, Eye, Flame, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import CommentSection from "@/components/Comments/CommentSection";
 import { UserBadge } from "@/components/Badge/UserBadge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -18,18 +42,78 @@ type Post = Database["public"]["Tables"]["posts"]["Row"] & {
 interface PostCardProps {
   post: Post;
   onReaction: () => void;
+  onPostDeleted?: () => void;
+  onPostUpdated?: () => void;
 }
 
-const PostCard = ({ post, onReaction }: PostCardProps) => {
+const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardProps) => {
   const [reacting, setReacting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [badges, setBadges] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editCaption, setEditCaption] = useState(post.caption || "");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     loadCommentCount();
     loadUserBadges();
+    checkCurrentUser();
   }, [post.id]);
+
+  const checkCurrentUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setCurrentUserId(session?.user?.id || null);
+  };
+
+  const isOwner = currentUserId === post.user_id;
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      haptics.success();
+      toast.success("Post deleted");
+      onPostDeleted?.();
+    } catch (error: any) {
+      haptics.error();
+      toast.error("Failed to delete post");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({ caption: editCaption })
+        .eq('id', post.id);
+
+      if (error) throw error;
+
+      haptics.success();
+      toast.success("Post updated");
+      setShowEditDialog(false);
+      onPostUpdated?.();
+    } catch (error: any) {
+      haptics.error();
+      toast.error("Failed to update post");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const loadCommentCount = async () => {
     const { count } = await supabase
@@ -142,6 +226,32 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
             </div>
           </div>
         </div>
+        
+        {isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => {
+                setEditCaption(post.caption || "");
+                setShowEditDialog(true);
+              }}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit caption
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Media */}
@@ -240,6 +350,51 @@ const PostCard = ({ post, onReaction }: PostCardProps) => {
           </CollapsibleContent>
         </Collapsible>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your post.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Caption Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit caption</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={editCaption}
+            onChange={(e) => setEditCaption(e.target.value)}
+            placeholder="Write a caption..."
+            className="min-h-[100px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
