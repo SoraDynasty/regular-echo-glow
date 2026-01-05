@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe } from "lucide-react";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Phone } from "lucide-react";
+import EllieCall from "./EllieCall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -33,13 +34,16 @@ const moodConfig: Record<EllieMood, { label: string; emoji: string; color: strin
 };
 
 const quickPrompts = [
+  { icon: Phone, label: "Call Ellie", prompt: "__CALL__", isCall: true },
   { icon: Code, label: "Write code", prompt: "Help me write code for " },
   { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas for " },
   { icon: FileText, label: "Write content", prompt: "Help me write " },
   { icon: Palette, label: "Design ideas", prompt: "Give me design ideas for " },
   { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
-  { icon: Globe, label: "Research", prompt: "Research and explain " },
 ];
+
+// ElevenLabs Agent ID - users need to create their own agent at elevenlabs.io
+const ELLIE_AGENT_ID = ""; // Will prompt user to enter their agent ID
 
 const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -49,6 +53,8 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [mood, setMood] = useState<EllieMood>("default");
   const [showMoodSelector, setShowMoodSelector] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
+  const [agentId, setAgentId] = useState<string>("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
@@ -166,9 +172,27 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     onStateChange("idle");
   };
 
-  const handleQuickPrompt = (prompt: string) => {
+  const handleQuickPrompt = (prompt: string, isCall?: boolean) => {
+    if (isCall || prompt === "__CALL__") {
+      startCall();
+      return;
+    }
     setInput(prompt);
     inputRef.current?.focus();
+  };
+
+  const startCall = () => {
+    const id = prompt("Enter your ElevenLabs Agent ID:\n\nCreate an agent at elevenlabs.io/conversational-ai");
+    if (id && id.trim()) {
+      setAgentId(id.trim());
+      setIsInCall(true);
+      haptics.medium();
+    }
+  };
+
+  const endCall = () => {
+    setIsInCall(false);
+    setAgentId("");
   };
 
   const currentMood = moodConfig[mood];
@@ -205,6 +229,11 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     });
   };
 
+  // Render call UI if in call mode
+  if (isInCall && agentId) {
+    return <EllieCall onClose={endCall} agentId={agentId} />;
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
@@ -223,6 +252,16 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
               <p className="text-xs text-muted-foreground">Your AI assistant</p>
             </div>
           </div>
+          
+          {/* Call button */}
+          <Button
+            onClick={startCall}
+            size="icon"
+            variant="ghost"
+            className="rounded-full text-green-500 hover:text-green-600 hover:bg-green-500/10"
+          >
+            <Phone className="w-5 h-5" />
+          </Button>
           
           <button
             onClick={() => setShowMoodSelector(!showMoodSelector)}
@@ -275,10 +314,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
                 {quickPrompts.map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleQuickPrompt(item.prompt)}
-                    className="flex items-center gap-2 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors text-left"
+                    onClick={() => handleQuickPrompt(item.prompt, (item as any).isCall)}
+                    className={`flex items-center gap-2 p-3 rounded-2xl transition-colors text-left ${
+                      (item as any).isCall 
+                        ? 'bg-green-500/20 hover:bg-green-500/30 ring-1 ring-green-500/50' 
+                        : 'bg-muted/50 hover:bg-muted'
+                    }`}
                   >
-                    <item.icon className="w-5 h-5 text-primary" />
+                    <item.icon className={`w-5 h-5 ${(item as any).isCall ? 'text-green-500' : 'text-primary'}`} />
                     <span className="text-sm font-medium">{item.label}</span>
                   </button>
                 ))}
