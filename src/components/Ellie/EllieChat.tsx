@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Phone } from "lucide-react";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Phone, Settings } from "lucide-react";
 import EllieCall from "./EllieCall";
+import AgentIdDialog, { getStoredAgentId, clearAgentId } from "./AgentIdDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -42,9 +43,6 @@ const quickPrompts = [
   { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
 ];
 
-// ElevenLabs Agent ID - users need to create their own agent at elevenlabs.io
-const ELLIE_AGENT_ID = ""; // Will prompt user to enter their agent ID
-
 const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -55,6 +53,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [showMoodSelector, setShowMoodSelector] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
   const [agentId, setAgentId] = useState<string>("");
+  const [showAgentIdDialog, setShowAgentIdDialog] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
@@ -182,17 +181,31 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   };
 
   const startCall = () => {
-    const id = prompt("Enter your ElevenLabs Agent ID:\n\nCreate an agent at elevenlabs.io/conversational-ai");
-    if (id && id.trim()) {
-      setAgentId(id.trim());
+    const storedId = getStoredAgentId();
+    if (storedId) {
+      setAgentId(storedId);
       setIsInCall(true);
       haptics.medium();
+    } else {
+      setShowAgentIdDialog(true);
     }
+  };
+
+  const handleAgentIdSave = (id: string) => {
+    setShowAgentIdDialog(false);
+    setAgentId(id);
+    setIsInCall(true);
+    haptics.medium();
   };
 
   const endCall = () => {
     setIsInCall(false);
+  };
+
+  const resetAgentId = () => {
+    clearAgentId();
     setAgentId("");
+    toast.success("Agent ID cleared");
   };
 
   const currentMood = moodConfig[mood];
@@ -235,6 +248,12 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   }
 
   return (
+    <>
+      <AgentIdDialog
+        open={showAgentIdDialog}
+        onSave={handleAgentIdSave}
+        onCancel={() => setShowAgentIdDialog(false)}
+      />
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
       <header className="safe-area-top px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-xl">
@@ -262,6 +281,19 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           >
             <Phone className="w-5 h-5" />
           </Button>
+          
+          {/* Reset Agent ID button - only show if one is saved */}
+          {getStoredAgentId() && (
+            <Button
+              onClick={resetAgentId}
+              size="icon"
+              variant="ghost"
+              className="rounded-full text-muted-foreground hover:text-foreground"
+              title="Change Agent ID"
+            >
+              <Settings className="w-4 h-4" />
+            </Button>
+          )}
           
           <button
             onClick={() => setShowMoodSelector(!showMoodSelector)}
@@ -405,7 +437,8 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
