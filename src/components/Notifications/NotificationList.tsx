@@ -60,7 +60,8 @@ const NotificationList = ({ onNotificationRead }: NotificationListProps) => {
       case 'comment':
         return <MessageCircle className="w-4 h-4 text-blue-500" />;
       case 'follow':
-        return <User className="w-4 h-4 text-green-500" />;
+      case 'observe':
+        return <User className="w-4 h-4 text-muted-foreground" />;
       default:
         return <User className="w-4 h-4" />;
     }

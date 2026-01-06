@@ -262,7 +262,7 @@ const Chat = () => {
                 <Send className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
                 <p className="text-sm text-muted-foreground">
-                  Follow friends to start messaging!
+                  Start observing people to message them
                 </p>
               </div>
             )}

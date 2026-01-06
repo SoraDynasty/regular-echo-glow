@@ -2,18 +2,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Settings, Sparkles, Ghost as GhostIcon, Crown } from "lucide-react";
+import { Settings, Sparkles, Ghost as GhostIcon, Crown, Eye } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import ShareProfileQR from "@/components/Profile/ShareProfileQR";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { UserBadge } from "@/components/Badge/UserBadge";
 import type { Database } from "@/integrations/supabase/types";
+
 const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [postsCount, setPostsCount] = useState(0);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const [observingCount, setObservingCount] = useState(0);
   const [subscription, setSubscription] = useState<any>(null);
   const [badges, setBadges] = useState<any[]>([]);
   useEffect(() => {
@@ -45,23 +45,14 @@ const Profile = () => {
       }).eq("user_id", data.id);
       setPostsCount(posts || 0);
 
-      // Load followers count
+      // Load observing count (who you follow/observe)
       const {
-        count: followers
-      } = await supabase.from("follows").select("*", {
-        count: "exact",
-        head: true
-      }).eq("following_id", data.id);
-      setFollowersCount(followers || 0);
-
-      // Load following count
-      const {
-        count: following
+        count: observing
       } = await supabase.from("follows").select("*", {
         count: "exact",
         head: true
       }).eq("follower_id", data.id);
-      setFollowingCount(following || 0);
+      setObservingCount(observing || 0);
 
       // Load subscription status
       const { data: subData } = await supabase
@@ -147,17 +138,14 @@ const Profile = () => {
           {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
         </p>
 
-        {/* Stats - Ghost accounts (ghost, observer, echo) show 0 followers */}
+        {/* Stats - Only Observing count shown */}
         <div className="flex justify-center gap-12 mb-6">
-          {profile.account_type === "regulus" && (
-            <div className="text-center">
-              <div className="text-2xl font-bold">{followersCount}</div>
-              <div className="text-xs text-muted-foreground">Followers</div>
-            </div>
-          )}
           <div className="text-center">
-            <div className="text-2xl font-bold">{followingCount}</div>
-            <div className="text-xs text-muted-foreground">Following</div>
+            <div className="text-lg font-medium text-muted-foreground">{observingCount}</div>
+            <div className="text-xs text-muted-foreground/70 flex items-center gap-1 justify-center">
+              <Eye className="w-3 h-3" />
+              Observing
+            </div>
           </div>
         </div>
 
