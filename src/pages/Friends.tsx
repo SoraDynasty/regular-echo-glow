@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, UserPlus, Share2, Sparkles, Plus, Users as UsersIcon, Lock, Globe } from "lucide-react";
+import { Search, UserPlus, Share2, Sparkles, Plus, Users as UsersIcon, Lock, Globe, Eye } from "lucide-react";
 import { toast } from "sonner";
 import MobileNav from "@/components/MobileNav";
 import { CreateCommunityDialog } from "@/components/Communities/CreateCommunityDialog";
@@ -150,7 +150,8 @@ const Friends = () => {
     }
   };
 
-  const handleFollow = async (userId: string) => {
+  const handleObserve = async (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!currentUserId) return;
     
     haptics.light();
@@ -168,7 +169,7 @@ const Friends = () => {
           newSet.delete(userId);
           return newSet;
         });
-        toast.success("Unfollowed");
+        toast.success("Stopped observing");
       } else {
         await supabase
           .from("follows")
@@ -176,7 +177,7 @@ const Friends = () => {
         
         setFollowing(prev => new Set(prev).add(userId));
         haptics.success();
-        toast.success("Following!");
+        toast.success("Now observing");
       }
     } catch (error: any) {
       toast.error("Action failed");
@@ -294,24 +295,31 @@ const Friends = () => {
                 {filteredUsers.map((user) => (
                   <div
                     key={user.id}
-                    className="flex items-center gap-3 p-4 glass-card rounded-2xl hover-scale"
+                    className="flex items-center gap-3 p-4 glass-card rounded-2xl hover-scale cursor-pointer"
+                    onClick={() => navigate(`/user/${user.id}`)}
                   >
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center gradient-regulus border-2 border-border flex-shrink-0">
-                      <Sparkles className="w-7 h-7" />
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 border-border/50 flex-shrink-0 ${user.account_type === "regulus" ? "gradient-regulus" : "gradient-ghost"} opacity-80`}>
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                      ) : user.account_type === "regulus" ? (
+                        <Sparkles className="w-7 h-7 text-muted-foreground" />
+                      ) : (
+                        <Eye className="w-7 h-7 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold truncate">{user.username}</h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {user.bio || "No bio yet"}
+                      <h3 className="font-medium text-foreground/90 truncate">{user.username}</h3>
+                      <p className="text-sm text-muted-foreground/70 truncate">
+                        {user.bio || "No bio"}
                       </p>
                     </div>
                     <Button
                       size="sm"
-                      variant={following.has(user.id) ? "outline" : "default"}
-                      onClick={() => handleFollow(user.id)}
-                      className="rounded-full px-6"
+                      variant={following.has(user.id) ? "ghost" : "outline"}
+                      onClick={(e) => handleObserve(user.id, e)}
+                      className="rounded-full px-4 text-muted-foreground"
                     >
-                      {following.has(user.id) ? "Following" : "Follow"}
+                      {following.has(user.id) ? "Observing" : "Observe"}
                     </Button>
                   </div>
                 ))}

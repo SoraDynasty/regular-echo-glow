@@ -16,6 +16,7 @@ import Chat from "./pages/Chat";
 import DirectMessage from "./pages/DirectMessage";
 import Capture from "./pages/Capture";
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import EditProfile from "./pages/EditProfile";
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
@@ -41,6 +42,7 @@ const AnimatedRoutes = () => {
         <Route path="/dm/:recipientId" element={<ProtectedRoute><DirectMessage /></ProtectedRoute>} />
         <Route path="/capture" element={<ProtectedRoute><Capture /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/user/:userId" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
         <Route path="/community/:id" element={<ProtectedRoute><CommunityDetail /></ProtectedRoute>} />

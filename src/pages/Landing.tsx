@@ -80,13 +80,13 @@ const Landing = () => {
               </div>
               <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-glow-regulus">⚡️ Regulus</h3>
               <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-4 md:mb-6 leading-relaxed">
-                Visible accounts that shine bright. Share your authentic moments with the world, 
-                build your following, and be discovered by others.
+                Visible accounts that shine bright. Share your authentic moments with the world 
+                and be discovered by others.
               </p>
               <ul className="space-y-2 md:space-y-3 text-sm md:text-base text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-0.5">•</span>
-                  <span>Visible and followable profile</span>
+                  <span>Visible profile with posts</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-0.5">•</span>
