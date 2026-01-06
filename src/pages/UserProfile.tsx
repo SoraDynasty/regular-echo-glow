@@ -2,11 +2,20 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Ghost as GhostIcon, Eye } from "lucide-react";
+import { ArrowLeft, Sparkles, Ghost as GhostIcon, Eye, X } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { UserBadge } from "@/components/Badge/UserBadge";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import type { Database } from "@/integrations/supabase/types";
+
+type PostWithProfile = Database["public"]["Tables"]["posts"]["Row"] & {
+  profiles: Database["public"]["Tables"]["profiles"]["Row"];
+  reactions: Database["public"]["Tables"]["reactions"]["Row"][];
+};
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -15,8 +24,9 @@ const UserProfile = () => {
   const [postsCount, setPostsCount] = useState(0);
   const [observingCount, setObservingCount] = useState(0);
   const [badges, setBadges] = useState<any[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<PostWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState<PostWithProfile | null>(null);
   const [isCurrentUser, setIsCurrentUser] = useState(false);
 
   useEffect(() => {
@@ -73,16 +83,20 @@ const UserProfile = () => {
       setBadges(badgeData);
     }
 
-    // Load user's posts (limited preview)
+    // Load user's posts with full data for viewing
     const { data: postsData } = await supabase
       .from("posts")
-      .select("id, front_media_url")
+      .select(`
+        *,
+        profiles!posts_user_id_fkey(*),
+        reactions(*)
+      `)
       .eq("user_id", data.id)
       .order("created_at", { ascending: false })
       .limit(9);
     
     if (postsData) {
-      setPosts(postsData);
+      setPosts(postsData as PostWithProfile[]);
     }
 
     setLoading(false);
@@ -190,17 +204,21 @@ const UserProfile = () => {
           </div>
         )}
 
-        {/* Posts Grid - View only */}
+        {/* Posts Grid - Tap to view */}
         {posts.length > 0 ? (
           <div className="grid grid-cols-3 gap-1">
             {posts.map((post) => (
-              <div key={post.id} className="aspect-[3/4] bg-muted rounded-lg overflow-hidden">
+              <button
+                key={post.id}
+                onClick={() => setSelectedPost(post)}
+                className="aspect-[3/4] bg-muted rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
                 <img 
                   src={post.front_media_url} 
                   alt="" 
-                  className="w-full h-full object-cover opacity-80"
+                  className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
                 />
-              </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -208,6 +226,53 @@ const UserProfile = () => {
             <p className="text-sm text-muted-foreground/60">No posts yet</p>
           </div>
         )}
+
+        {/* Full Post View Dialog */}
+        <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
+          <DialogContent className="max-w-md p-0 bg-background border-border overflow-hidden">
+            {selectedPost && (
+              <div className="relative">
+                {/* Close button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedPost(null)}
+                  className="absolute top-2 right-2 z-10 rounded-full bg-background/80 backdrop-blur-sm"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+                
+                {/* Post media */}
+                <div className="relative aspect-[3/4] bg-muted">
+                  <img 
+                    src={selectedPost.front_media_url} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedPost.back_media_url && (
+                    <div className="absolute top-3 left-3 w-20 h-28 rounded-lg overflow-hidden border-2 border-background/50 shadow-lg">
+                      <img 
+                        src={selectedPost.back_media_url} 
+                        alt="" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Post info */}
+                <div className="p-4 space-y-2">
+                  {selectedPost.caption && (
+                    <p className="text-sm text-foreground/90">{selectedPost.caption}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(selectedPost.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
 
       <MobileNav />
