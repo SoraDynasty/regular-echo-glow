@@ -138,16 +138,27 @@ const Profile = () => {
           {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
         </p>
 
-        {/* Stats - Only Observing count shown */}
-        <div className="flex justify-center gap-12 mb-6">
-          <div className="text-center">
-            <div className="text-lg font-medium text-muted-foreground">{observingCount}</div>
-            <div className="text-xs text-muted-foreground/70 flex items-center gap-1 justify-center">
-              <Eye className="w-3 h-3" />
-              Observing
+        {/* Stats - Only Observing count shown for regulus accounts */}
+        {profile.account_type === "regulus" && (
+          <div className="flex justify-center gap-12 mb-6">
+            <div className="text-center">
+              <div className="text-lg font-medium text-muted-foreground">{observingCount}</div>
+              <div className="text-xs text-muted-foreground/70 flex items-center gap-1 justify-center">
+                <Eye className="w-3 h-3" />
+                Observing
+              </div>
             </div>
           </div>
-        </div>
+        )}
+        
+        {/* Ghost type notice for ghost accounts */}
+        {profile.account_type === "ghost" && (
+          <div className="text-center mb-6 p-3 rounded-xl bg-muted/30">
+            <p className="text-xs text-muted-foreground/70">
+              View-only profile • GhostMode accounts don't follow or get followed
+            </p>
+          </div>
+        )}
 
         {/* Premium Badge */}
         {subscription?.status === 'active' && (

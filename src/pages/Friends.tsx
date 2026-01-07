@@ -26,6 +26,7 @@ interface Community {
 const Friends = () => {
   const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserAccountType, setCurrentUserAccountType] = useState<string | null>(null);
   const [users, setUsers] = useState<Profile[]>([]);
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,14 +59,27 @@ const Friends = () => {
     }
     setCurrentUserId(session.user.id);
     
-    // Load following list
-    const { data: follows } = await supabase
-      .from("follows")
-      .select("following_id")
-      .eq("follower_id", session.user.id);
+    // Get current user's account type
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("account_type")
+      .eq("id", session.user.id)
+      .single();
     
-    if (follows) {
-      setFollowing(new Set(follows.map(f => f.following_id)));
+    if (profile) {
+      setCurrentUserAccountType(profile.account_type);
+    }
+    
+    // Load following list (only for regulus accounts)
+    if (profile?.account_type === "regulus") {
+      const { data: follows } = await supabase
+        .from("follows")
+        .select("following_id")
+        .eq("follower_id", session.user.id);
+      
+      if (follows) {
+        setFollowing(new Set(follows.map(f => f.following_id)));
+      }
     }
   };
 
@@ -150,9 +164,19 @@ const Friends = () => {
     }
   };
 
-  const handleObserve = async (userId: string, e: React.MouseEvent) => {
+  const handleObserve = async (userId: string, targetAccountType: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUserId) return;
+    
+    // Only regulus accounts can observe/be observed
+    if (currentUserAccountType !== "regulus") {
+      toast.error("Only Regulus accounts can observe others");
+      return;
+    }
+    if (targetAccountType !== "regulus") {
+      toast.error("Ghost accounts cannot be observed");
+      return;
+    }
     
     haptics.light();
     
@@ -313,14 +337,17 @@ const Friends = () => {
                         {user.bio || "No bio"}
                       </p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant={following.has(user.id) ? "ghost" : "outline"}
-                      onClick={(e) => handleObserve(user.id, e)}
-                      className="rounded-full px-4 text-muted-foreground"
-                    >
-                      {following.has(user.id) ? "Observing" : "Observe"}
-                    </Button>
+                    {/* Only show observe button for regulus-to-regulus */}
+                    {currentUserAccountType === "regulus" && user.account_type === "regulus" && (
+                      <Button
+                        size="sm"
+                        variant={following.has(user.id) ? "ghost" : "outline"}
+                        onClick={(e) => handleObserve(user.id, user.account_type, e)}
+                        className="rounded-full px-4 text-muted-foreground"
+                      >
+                        {following.has(user.id) ? "Observing" : "Observe"}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

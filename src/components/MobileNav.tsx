@@ -23,9 +23,9 @@ const MobileNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-[100] md:hidden">
       {/* Background extends to screen edge, content respects safe area */}
-      <div className="bg-background/95 backdrop-blur-xl border-t border-border/30">
+      <div className="bg-background backdrop-blur-xl border-t border-border/30">
         <div className="flex items-center justify-around h-16 px-2 safe-area-bottom">
           {navItems.map(({ icon: Icon, label, path, isCenter }) => {
             const isActive = location.pathname === path;
