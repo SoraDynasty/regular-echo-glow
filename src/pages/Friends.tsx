@@ -164,17 +164,17 @@ const Friends = () => {
     }
   };
 
-  const handleObserve = async (userId: string, targetAccountType: string, e: React.MouseEvent) => {
+  const handleFollow = async (userId: string, targetAccountType: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUserId) return;
     
-    // Only regulus accounts can observe/be observed
+    // Only regulus accounts can follow/be followed
     if (currentUserAccountType !== "regulus") {
-      toast.error("Only Regulus accounts can observe others");
+      toast.error("Only Regulus accounts can follow others");
       return;
     }
     if (targetAccountType !== "regulus") {
-      toast.error("Ghost accounts cannot be observed");
+      toast.error("Only Regulus accounts can be followed");
       return;
     }
     
@@ -193,7 +193,7 @@ const Friends = () => {
           newSet.delete(userId);
           return newSet;
         });
-        toast.success("Stopped observing");
+        toast.success("Unfollowed");
       } else {
         await supabase
           .from("follows")
@@ -201,7 +201,7 @@ const Friends = () => {
         
         setFollowing(prev => new Set(prev).add(userId));
         haptics.success();
-        toast.success("Now observing");
+        toast.success("Now following");
       }
     } catch (error: any) {
       toast.error("Action failed");
@@ -337,15 +337,15 @@ const Friends = () => {
                         {user.bio || "No bio"}
                       </p>
                     </div>
-                    {/* Only show observe button for regulus-to-regulus */}
+                    {/* Only show follow button for regulus-to-regulus */}
                     {currentUserAccountType === "regulus" && user.account_type === "regulus" && (
                       <Button
                         size="sm"
                         variant={following.has(user.id) ? "ghost" : "outline"}
-                        onClick={(e) => handleObserve(user.id, user.account_type, e)}
+                        onClick={(e) => handleFollow(user.id, user.account_type, e)}
                         className="rounded-full px-4 text-muted-foreground"
                       >
-                        {following.has(user.id) ? "Observing" : "Observe"}
+                        {following.has(user.id) ? "Following" : "Follow"}
                       </Button>
                     )}
                   </div>
