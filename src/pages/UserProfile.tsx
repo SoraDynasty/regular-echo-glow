@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles, Ghost as GhostIcon, Eye, X } from "lucide-react";
+import { ArrowLeft, Sparkles, Ghost as GhostIcon, X } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { UserBadge } from "@/components/Badge/UserBadge";
@@ -23,6 +23,7 @@ const UserProfile = () => {
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [postsCount, setPostsCount] = useState(0);
   const [observingCount, setObservingCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
   const [badges, setBadges] = useState<any[]>([]);
   const [posts, setPosts] = useState<PostWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,12 +68,20 @@ const UserProfile = () => {
       .eq("user_id", data.id);
     setPostsCount(posts || 0);
 
-    // Load observing count (who they follow)
-    const { count: observing } = await supabase
-      .from("follows")
-      .select("*", { count: "exact", head: true })
-      .eq("follower_id", data.id);
-    setObservingCount(observing || 0);
+    // Load observing and followers count - only for regulus accounts
+    if (data.account_type === "regulus") {
+      const { count: observing } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", data.id);
+      setObservingCount(observing || 0);
+
+      const { count: followers } = await supabase
+        .from("follows")
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", data.id);
+      setFollowersCount(followers || 0);
+    }
 
     // Load badges
     const { data: badgeData } = await supabase
@@ -184,15 +193,16 @@ const UserProfile = () => {
           {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
         </p>
 
-        {/* Stats - Only Observing count for regulus accounts, muted design */}
+        {/* Stats - Followers and Following counts only for Regulus accounts */}
         {profile.account_type === "regulus" && (
-          <div className="flex justify-center gap-8 mb-6">
+          <div className="flex justify-center gap-12 mb-6">
             <div className="text-center">
-              <div className="text-lg font-medium text-muted-foreground">{observingCount}</div>
-              <div className="text-xs text-muted-foreground/70 flex items-center gap-1 justify-center">
-                <Eye className="w-3 h-3" />
-                Observing
-              </div>
+              <div className="text-lg font-medium text-foreground/90">{followersCount}</div>
+              <div className="text-xs text-muted-foreground/70">Followers</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-medium text-foreground/90">{observingCount}</div>
+              <div className="text-xs text-muted-foreground/70">Following</div>
             </div>
           </div>
         )}

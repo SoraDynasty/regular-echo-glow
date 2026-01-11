@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Settings, Sparkles, Ghost as GhostIcon, Crown, Eye } from "lucide-react";
+import { Settings, Sparkles, Ghost as GhostIcon, Crown } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import ShareProfileQR from "@/components/Profile/ShareProfileQR";
 import LoadingAnimation from "@/components/LoadingAnimation";
@@ -14,6 +14,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
   const [postsCount, setPostsCount] = useState(0);
   const [observingCount, setObservingCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
   const [subscription, setSubscription] = useState<any>(null);
   const [badges, setBadges] = useState<any[]>([]);
   useEffect(() => {
@@ -45,14 +46,25 @@ const Profile = () => {
       }).eq("user_id", data.id);
       setPostsCount(posts || 0);
 
-      // Load observing count (who you follow/observe)
-      const {
-        count: observing
-      } = await supabase.from("follows").select("*", {
-        count: "exact",
-        head: true
-      }).eq("follower_id", data.id);
-      setObservingCount(observing || 0);
+      // Load observing count (who you follow/observe) - only for regulus
+      if (data.account_type === "regulus") {
+        const {
+          count: observing
+        } = await supabase.from("follows").select("*", {
+          count: "exact",
+          head: true
+        }).eq("follower_id", data.id);
+        setObservingCount(observing || 0);
+
+        // Load followers count (who follows you) - only for regulus
+        const {
+          count: followers
+        } = await supabase.from("follows").select("*", {
+          count: "exact",
+          head: true
+        }).eq("following_id", data.id);
+        setFollowersCount(followers || 0);
+      }
 
       // Load subscription status
       const { data: subData } = await supabase
@@ -138,15 +150,16 @@ const Profile = () => {
           {profile.account_type === "regulus" ? "⚡️ Regulus" : "🌫️ GhostMode"}
         </p>
 
-        {/* Stats - Only Observing count shown for regulus accounts */}
+        {/* Stats - Followers and Observing counts shown only for Regulus accounts */}
         {profile.account_type === "regulus" && (
           <div className="flex justify-center gap-12 mb-6">
             <div className="text-center">
-              <div className="text-lg font-medium text-muted-foreground">{observingCount}</div>
-              <div className="text-xs text-muted-foreground/70 flex items-center gap-1 justify-center">
-                <Eye className="w-3 h-3" />
-                Observing
-              </div>
+              <div className="text-lg font-medium text-foreground">{followersCount}</div>
+              <div className="text-xs text-muted-foreground">Followers</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-medium text-foreground">{observingCount}</div>
+              <div className="text-xs text-muted-foreground">Following</div>
             </div>
           </div>
         )}
