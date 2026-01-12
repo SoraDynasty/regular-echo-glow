@@ -25,7 +25,7 @@ const MobileNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[100] md:hidden">
       {/* Background extends to screen edge, content respects safe area */}
-      <div className="bg-background backdrop-blur-xl border-t border-border/30">
+      <div className="bg-background/95 backdrop-blur-xl border-t border-border/30 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-around h-16 px-2 safe-area-bottom">
           {navItems.map(({ icon: Icon, label, path, isCenter }) => {
             const isActive = location.pathname === path;
@@ -35,7 +35,7 @@ const MobileNav = () => {
                 <button
                   key={path}
                   onClick={() => handleNavigate(path)}
-                  className="flex items-center justify-center h-14 w-14 rounded-full bg-foreground text-background -mt-6 shadow-lg active:scale-95 transition-transform duration-150"
+                  className="flex items-center justify-center h-14 w-14 rounded-full bg-foreground text-background -mt-6 shadow-lg transition-all duration-200 active:scale-90 hover:shadow-xl hover:scale-105"
                 >
                   <Icon className="w-7 h-7" />
                 </button>
@@ -47,12 +47,18 @@ const MobileNav = () => {
                 key={path}
                 onClick={() => handleNavigate(path)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 h-12 w-14 rounded-xl transition-all duration-200 active:scale-95",
-                  isActive ? "text-foreground" : "text-muted-foreground"
+                  "flex flex-col items-center justify-center gap-0.5 h-12 w-14 rounded-xl transition-all duration-200 active:scale-90",
+                  isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground/80"
                 )}
               >
-                <Icon className={cn("w-6 h-6 transition-transform duration-200", isActive && "scale-110")} />
-                <span className="text-[10px] font-medium">{label}</span>
+                <Icon className={cn(
+                  "w-6 h-6 transition-all duration-200",
+                  isActive && "scale-110 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+                )} />
+                <span className={cn(
+                  "text-[10px] font-medium transition-all duration-200",
+                  isActive && "font-semibold"
+                )}>{label}</span>
               </button>
             );
           })}

@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Settings, Users, ImageIcon, Lock, Globe, Loader2, LogOut, MessageCircle } from "lucide-react";
+import { ArrowLeft, Settings, Users, ImageIcon, Lock, Globe, Loader2, LogOut, MessageCircle, UserPlus, Crown, ShieldCheck } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import { useToast } from "@/hooks/use-toast";
 import PostCard from "@/components/PostCard";
 import CommunityChat from "@/components/Communities/CommunityChat";
+import { InviteMemberDialog } from "@/components/Communities/InviteMemberDialog";
+import { MemberManagement } from "@/components/Communities/MemberManagement";
 interface Community {
   id: string;
   name: string;
@@ -42,6 +44,7 @@ const CommunityDetail = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [userMembership, setUserMembership] = useState<Member | null>(null);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -223,7 +226,9 @@ const CommunityDetail = () => {
     return null;
   }
 
-  const isAdmin = userMembership?.role === "admin";
+  const isOwner = userMembership?.role === "owner";
+  const isAdmin = userMembership?.role === "admin" || isOwner;
+  const canInvite = isOwner || isAdmin;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -293,14 +298,28 @@ const CommunityDetail = () => {
         {/* Action Buttons */}
         <div className="mt-4 flex gap-3">
           {userMembership ? (
-            <Button
-              variant="outline"
-              className="flex-1 gap-2"
-              onClick={handleLeave}
-            >
-              <LogOut className="w-4 h-4" />
-              Leave
-            </Button>
+            <>
+              {canInvite && (
+                <Button
+                  variant="default"
+                  className="gap-2"
+                  onClick={() => setShowInviteDialog(true)}
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Invite
+                </Button>
+              )}
+              {!isOwner && (
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={handleLeave}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Leave
+                </Button>
+              )}
+            </>
           ) : (
             <Button
               className="flex-1"
@@ -365,30 +384,36 @@ const CommunityDetail = () => {
           </TabsContent>
 
           <TabsContent value="members" className="px-4 mt-4">
-            <div className="space-y-3">
-              {members.map((member) => (
-                <Card key={member.id} className="glass-card">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <Avatar
-                      className="w-10 h-10 cursor-pointer"
-                      onClick={() => navigate(`/profile/${member.user_id}`)}
-                    >
-                      <AvatarImage src={member.profile?.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {member.profile?.username?.charAt(0).toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-medium">{member.profile?.username || "Unknown"}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {canInvite && (
+              <Button
+                variant="outline"
+                className="w-full mb-4 gap-2"
+                onClick={() => setShowInviteDialog(true)}
+              >
+                <UserPlus className="w-4 h-4" />
+                Invite Members
+              </Button>
+            )}
+            <MemberManagement
+              members={members}
+              currentUserId={user?.id}
+              currentUserRole={userMembership?.role || "member"}
+              communityId={id!}
+              onMemberUpdated={fetchCommunityData}
+            />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Invite Dialog */}
+      <InviteMemberDialog
+        open={showInviteDialog}
+        onOpenChange={setShowInviteDialog}
+        communityId={id!}
+        currentUserRole={userMembership?.role || "member"}
+        existingMemberIds={members.map(m => m.user_id)}
+        onMemberAdded={fetchCommunityData}
+      />
 
       <MobileNav />
     </div>

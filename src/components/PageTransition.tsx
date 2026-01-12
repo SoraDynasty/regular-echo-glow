@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 interface PageTransitionProps {
@@ -7,29 +7,42 @@ interface PageTransitionProps {
 
 const PageTransition = ({ children }: PageTransitionProps) => {
   const location = useLocation();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [displayChildren, setDisplayChildren] = useState(children);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Reset animation state on route change
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Fade out
     setIsVisible(false);
     
-    // Small delay to ensure CSS transition triggers
+    // After fade out, swap content and fade in
     const timer = setTimeout(() => {
       setDisplayChildren(children);
       setIsVisible(true);
-    }, 20);
+    }, 150);
 
     return () => clearTimeout(timer);
-  }, [location.pathname, children]);
+  }, [location.pathname]);
+
+  // Update children when they change (but not on route change - that's handled above)
+  useEffect(() => {
+    if (isFirstRender.current) return;
+    setDisplayChildren(children);
+  }, [children]);
 
   return (
     <div
-      className={`min-h-screen transition-all duration-250 ease-out ${
+      className={`min-h-screen transition-all duration-200 ease-out ${
         isVisible
           ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-1"
+          : "opacity-0 translate-y-2"
       }`}
+      style={{ willChange: "opacity, transform" }}
     >
       {displayChildren}
     </div>

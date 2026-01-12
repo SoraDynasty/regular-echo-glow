@@ -197,11 +197,11 @@ const Communities = () => {
               {myCommunities.map((community) => (
                 <Card
                   key={community.id}
-                  className="glass-card cursor-pointer hover:bg-accent/50 transition-colors"
+                  className="glass-card cursor-pointer group"
                   onClick={() => navigate(`/community/${community.id}`)}
                 >
                   <CardContent className="p-4 flex items-center gap-4">
-                    <Avatar className="w-14 h-14">
+                    <Avatar className="w-14 h-14 ring-2 ring-transparent group-hover:ring-primary/30 transition-all">
                       <AvatarImage src={community.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary/20 text-primary text-lg">
                         {community.name.charAt(0).toUpperCase()}
@@ -209,7 +209,7 @@ const Communities = () => {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold truncate">{community.name}</h3>
+                        <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{community.name}</h3>
                         {community.privacy === "private" ? (
                           <Lock className="w-3 h-3 text-muted-foreground" />
                         ) : (
@@ -244,12 +244,12 @@ const Communities = () => {
               {filteredCommunities.map((community) => (
                 <Card
                   key={community.id}
-                  className="glass-card overflow-hidden"
+                  className="glass-card overflow-hidden group"
                 >
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <Avatar
-                        className="w-14 h-14 cursor-pointer"
+                        className="w-14 h-14 cursor-pointer ring-2 ring-transparent group-hover:ring-primary/30 transition-all"
                         onClick={() => navigate(`/community/${community.id}`)}
                       >
                         <AvatarImage src={community.avatar_url || undefined} />
@@ -262,7 +262,7 @@ const Communities = () => {
                         onClick={() => navigate(`/community/${community.id}`)}
                       >
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold truncate">{community.name}</h3>
+                          <h3 className="font-semibold truncate group-hover:text-primary transition-colors">{community.name}</h3>
                           <Globe className="w-3 h-3 text-muted-foreground" />
                         </div>
                         <p className="text-sm text-muted-foreground truncate">
@@ -276,6 +276,7 @@ const Communities = () => {
                         <Button
                           size="sm"
                           variant="outline"
+                          className="transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleJoinCommunity(community.id);
