@@ -79,13 +79,13 @@ export const CreateCommunityDialog = ({
       return;
     }
 
-    // Add creator as admin
+    // Add creator as owner
     const { error: memberError } = await supabase
       .from("community_members")
       .insert({
         community_id: community.id,
         user_id: session.user.id,
-        role: "admin"
+        role: "owner"
       });
 
     if (memberError) {

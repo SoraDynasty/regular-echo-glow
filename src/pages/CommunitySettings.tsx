@@ -39,7 +39,7 @@ const CommunitySettings = () => {
       return;
     }
 
-    // Check if user is admin
+    // Check if user is owner or admin
     const { data: membership } = await supabase
       .from("community_members")
       .select("role")
@@ -47,10 +47,10 @@ const CommunitySettings = () => {
       .eq("user_id", session.user.id)
       .single();
 
-    if (!membership || membership.role !== "admin") {
+    if (!membership || !["owner", "admin"].includes(membership.role)) {
       toast({
         title: "Access Denied",
-        description: "Only admins can edit community settings",
+        description: "Only owners and admins can edit community settings",
         variant: "destructive"
       });
       navigate(`/community/${id}`);

@@ -495,6 +495,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_community: {
+        Args: { _community_id: string; _user_id: string }
+        Returns: boolean
+      }
+      get_community_role: {
+        Args: { _community_id: string; _user_id: string }
+        Returns: string
+      }
       is_regulus_account: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
