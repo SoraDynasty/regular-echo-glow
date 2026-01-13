@@ -5,8 +5,10 @@ import { haptics } from "@/lib/haptics";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEllie } from "@/contexts/EllieContext";
 
 const MobileNav = () => {
+  const { isEllieOpen } = useEllie();
   const navigate = useNavigate();
   const location = useLocation();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -45,6 +47,11 @@ const MobileNav = () => {
     { icon: Send, label: "Chat", path: "/chat" },
     { label: "Profile", path: "/profile", isProfile: true },
   ];
+
+  // Hide nav when Ellie chat is open
+  if (isEllieOpen) {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[100] md:hidden px-4 pb-2">
