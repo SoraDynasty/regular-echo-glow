@@ -2,21 +2,25 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Settings, Sparkles, Ghost as GhostIcon, Crown } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Settings, Sparkles, Ghost as GhostIcon, Crown, X } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import ShareProfileQR from "@/components/Profile/ShareProfileQR";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { UserBadge } from "@/components/Badge/UserBadge";
 import type { Database } from "@/integrations/supabase/types";
 
+type Post = Database["public"]["Tables"]["posts"]["Row"];
 const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Database["public"]["Tables"]["profiles"]["Row"] | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [postsCount, setPostsCount] = useState(0);
   const [observingCount, setObservingCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [subscription, setSubscription] = useState<any>(null);
   const [badges, setBadges] = useState<any[]>([]);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   useEffect(() => {
     loadProfile();
   }, []);
@@ -37,14 +41,15 @@ const Profile = () => {
     if (data) {
       setProfile(data);
 
-      // Load posts count
-      const {
-        count: posts
-      } = await supabase.from("posts").select("*", {
-        count: "exact",
-        head: true
-      }).eq("user_id", data.id);
-      setPostsCount(posts || 0);
+      // Load posts
+      const { data: postsData, count: postsTotal } = await supabase
+        .from("posts")
+        .select("*", { count: "exact" })
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false });
+      
+      setPosts(postsData || []);
+      setPostsCount(postsTotal || 0);
 
       // Load observing count (who you follow/observe) - only for regulus
       if (data.account_type === "regulus") {
@@ -168,7 +173,7 @@ const Profile = () => {
         {profile.account_type === "ghost" && (
           <div className="text-center mb-6 p-3 rounded-xl bg-muted/30">
             <p className="text-xs text-muted-foreground/70">
-              View-only profile • GhostMode accounts don't follow or get followed
+              GhostMode • You can follow others but won't have visible followers
             </p>
           </div>
         )}
@@ -194,11 +199,56 @@ const Profile = () => {
 
         {/* Posts Grid */}
         <div className="grid grid-cols-3 gap-1">
-          {[...Array(9)].map((_, i) => <div key={i} className="aspect-[3/4] bg-muted rounded-lg flex items-center justify-center">
-              <span className="text-4xl opacity-20">📸</span>
-            </div>)}
+          {posts.length === 0 ? (
+            <div className="col-span-3 text-center py-12">
+              <span className="text-4xl opacity-30">📸</span>
+              <p className="text-muted-foreground mt-2">No posts yet</p>
+            </div>
+          ) : (
+            posts.map((post) => (
+              <div
+                key={post.id}
+                className="aspect-[3/4] bg-muted rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setSelectedPost(post)}
+              >
+                <img
+                  src={post.front_media_url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))
+          )}
         </div>
       </main>
+
+      {/* Post Modal */}
+      <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
+        <DialogContent className="max-w-lg p-0 bg-background border-none overflow-hidden">
+          {selectedPost && (
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-10 rounded-full bg-background/80 backdrop-blur-sm"
+                onClick={() => setSelectedPost(null)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+              <img
+                src={selectedPost.front_media_url}
+                alt=""
+                className="w-full aspect-[3/4] object-cover"
+              />
+              {selectedPost.caption && (
+                <div className="p-4">
+                  <p className="text-sm">{selectedPost.caption}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <MobileNav />
     </div>;

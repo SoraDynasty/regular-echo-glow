@@ -70,16 +70,14 @@ const Friends = () => {
       setCurrentUserAccountType(profile.account_type);
     }
     
-    // Load following list (only for regulus accounts)
-    if (profile?.account_type === "regulus") {
-      const { data: follows } = await supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", session.user.id);
-      
-      if (follows) {
-        setFollowing(new Set(follows.map(f => f.following_id)));
-      }
+    // Load following list for all accounts
+    const { data: follows } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", session.user.id);
+    
+    if (follows) {
+      setFollowing(new Set(follows.map(f => f.following_id)));
     }
   };
 
@@ -168,11 +166,7 @@ const Friends = () => {
     e.stopPropagation();
     if (!currentUserId) return;
     
-    // Only regulus accounts can follow/be followed
-    if (currentUserAccountType !== "regulus") {
-      toast.error("Only Regulus accounts can follow others");
-      return;
-    }
+    // Only regulus accounts can be followed
     if (targetAccountType !== "regulus") {
       toast.error("Only Regulus accounts can be followed");
       return;
@@ -337,8 +331,8 @@ const Friends = () => {
                         {user.bio || "No bio"}
                       </p>
                     </div>
-                    {/* Only show follow button for regulus-to-regulus */}
-                    {currentUserAccountType === "regulus" && user.account_type === "regulus" && (
+                    {/* Show follow button for regulus accounts (any user can follow them) */}
+                    {user.account_type === "regulus" && (
                       <Button
                         size="sm"
                         variant={following.has(user.id) ? "ghost" : "outline"}
