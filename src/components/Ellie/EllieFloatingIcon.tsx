@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import EllieChat from "./EllieChat";
 import { haptics } from "@/lib/haptics";
 import { supabase } from "@/integrations/supabase/client";
+import { useEllie } from "@/contexts/EllieContext";
 
 type EllieState = "idle" | "listening" | "cooking" | "responding" | "recording" | "transcribing" | "speaking";
 
 const EllieFloatingIcon = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isEllieOpen, setIsEllieOpen } = useEllie();
   const [ellieState, setEllieState] = useState<EllieState>("idle");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -25,15 +26,15 @@ const EllieFloatingIcon = () => {
   }, []);
 
   const handleOpen = () => {
-    if (!isOpen) {
+    if (!isEllieOpen) {
       haptics.light();
-      setIsOpen(true);
+      setIsEllieOpen(true);
     }
   };
 
   const handleClose = () => {
     haptics.light();
-    setIsOpen(false);
+    setIsEllieOpen(false);
   };
 
   const getGlowClass = () => {
@@ -61,7 +62,7 @@ const EllieFloatingIcon = () => {
   return (
     <>
       {/* Floating Icon - only show when chat is closed */}
-      {!isOpen && (
+      {!isEllieOpen && (
         <div className="fixed bottom-28 right-6 z-50">
           <Button
             onClick={handleOpen}
@@ -74,7 +75,7 @@ const EllieFloatingIcon = () => {
       )}
 
       {/* Fullscreen Chat */}
-      {isOpen && (
+      {isEllieOpen && (
         <EllieChat onClose={handleClose} onStateChange={setEllieState} />
       )}
     </>
