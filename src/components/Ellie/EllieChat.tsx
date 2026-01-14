@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Phone, Settings } from "lucide-react";
-import EllieCall from "./EllieCall";
-import AgentIdDialog, { getStoredAgentId, clearAgentId } from "./AgentIdDialog";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -35,12 +33,12 @@ const moodConfig: Record<EllieMood, { label: string; emoji: string; color: strin
 };
 
 const quickPrompts = [
-  { icon: Phone, label: "Call Ellie", prompt: "__CALL__", isCall: true },
   { icon: Code, label: "Write code", prompt: "Help me write code for " },
   { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas for " },
   { icon: FileText, label: "Write content", prompt: "Help me write " },
   { icon: Palette, label: "Design ideas", prompt: "Give me design ideas for " },
   { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
+  { icon: Globe, label: "Research", prompt: "Help me research " },
 ];
 
 const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
@@ -51,9 +49,6 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [mood, setMood] = useState<EllieMood>("default");
   const [showMoodSelector, setShowMoodSelector] = useState(false);
-  const [isInCall, setIsInCall] = useState(false);
-  const [agentId, setAgentId] = useState<string>("");
-  const [showAgentIdDialog, setShowAgentIdDialog] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
@@ -171,41 +166,9 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     onStateChange("idle");
   };
 
-  const handleQuickPrompt = (prompt: string, isCall?: boolean) => {
-    if (isCall || prompt === "__CALL__") {
-      startCall();
-      return;
-    }
+  const handleQuickPrompt = (prompt: string) => {
     setInput(prompt);
     inputRef.current?.focus();
-  };
-
-  const startCall = () => {
-    const storedId = getStoredAgentId();
-    if (storedId) {
-      setAgentId(storedId);
-      setIsInCall(true);
-      haptics.medium();
-    } else {
-      setShowAgentIdDialog(true);
-    }
-  };
-
-  const handleAgentIdSave = (id: string) => {
-    setShowAgentIdDialog(false);
-    setAgentId(id);
-    setIsInCall(true);
-    haptics.medium();
-  };
-
-  const endCall = () => {
-    setIsInCall(false);
-  };
-
-  const resetAgentId = () => {
-    clearAgentId();
-    setAgentId("");
-    toast.success("Agent ID cleared");
   };
 
   const currentMood = moodConfig[mood];
@@ -242,18 +205,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     });
   };
 
-  // Render call UI if in call mode
-  if (isInCall && agentId) {
-    return <EllieCall onClose={endCall} agentId={agentId} />;
-  }
-
   return (
-    <>
-      <AgentIdDialog
-        open={showAgentIdDialog}
-        onSave={handleAgentIdSave}
-        onCancel={() => setShowAgentIdDialog(false)}
-      />
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header */}
       <header className="safe-area-top px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-xl">
@@ -271,29 +223,6 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
               <p className="text-xs text-muted-foreground">Your AI assistant</p>
             </div>
           </div>
-          
-          {/* Call button */}
-          <Button
-            onClick={startCall}
-            size="icon"
-            variant="ghost"
-            className="rounded-full text-green-500 hover:text-green-600 hover:bg-green-500/10"
-          >
-            <Phone className="w-5 h-5" />
-          </Button>
-          
-          {/* Reset Agent ID button - only show if one is saved */}
-          {getStoredAgentId() && (
-            <Button
-              onClick={resetAgentId}
-              size="icon"
-              variant="ghost"
-              className="rounded-full text-muted-foreground hover:text-foreground"
-              title="Change Agent ID"
-            >
-              <Settings className="w-4 h-4" />
-            </Button>
-          )}
           
           <button
             onClick={() => setShowMoodSelector(!showMoodSelector)}
@@ -346,14 +275,10 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
                 {quickPrompts.map((item, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleQuickPrompt(item.prompt, (item as any).isCall)}
-                    className={`flex items-center gap-2 p-3 rounded-2xl transition-colors text-left ${
-                      (item as any).isCall 
-                        ? 'bg-green-500/20 hover:bg-green-500/30 ring-1 ring-green-500/50' 
-                        : 'bg-muted/50 hover:bg-muted'
-                    }`}
+                    onClick={() => handleQuickPrompt(item.prompt)}
+                    className="flex items-center gap-2 p-3 rounded-2xl transition-colors text-left bg-muted/50 hover:bg-muted"
                   >
-                    <item.icon className={`w-5 h-5 ${(item as any).isCall ? 'text-green-500' : 'text-primary'}`} />
+                    <item.icon className="w-5 h-5 text-primary" />
                     <span className="text-sm font-medium">{item.label}</span>
                   </button>
                 ))}
@@ -437,8 +362,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           )}
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 };
 
