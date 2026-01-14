@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Users, MessageCircle, Camera, Sparkles, Zap } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import kiteLogo from "@/assets/regulargram-kite.png";
 
 const Landing = () => {
   return <div className="min-h-screen bg-background">
@@ -21,9 +22,13 @@ const Landing = () => {
         </div>
         
         <div className="relative z-10 max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6 md:mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-xs md:text-sm font-medium text-muted-foreground">Authentic moments. No filters.</span>
+          {/* Kite Logo */}
+          <div className="mb-6 md:mb-8 animate-fade-in">
+            <img 
+              src={kiteLogo} 
+              alt="Regulargram Kite" 
+              className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 mx-auto object-contain opacity-90"
+            />
           </div>
           
           <h1 className="text-[3rem] leading-[1.1] sm:text-6xl md:text-7xl lg:text-8xl font-marker mb-4 md:mb-6 text-glow-regulus tracking-wider animate-scale-in px-2">
