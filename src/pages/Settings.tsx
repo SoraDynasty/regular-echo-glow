@@ -48,6 +48,7 @@ const Settings = () => {
           <Button 
             variant="ghost" 
             className="w-full justify-start gap-3 h-12"
+            onClick={() => navigate("/settings/privacy")}
           >
             <Shield className="w-5 h-5" />
             Privacy & Security
@@ -55,6 +56,7 @@ const Settings = () => {
           <Button 
             variant="ghost" 
             className="w-full justify-start gap-3 h-12"
+            onClick={() => navigate("/settings/appearance")}
           >
             <Palette className="w-5 h-5" />
             Appearance

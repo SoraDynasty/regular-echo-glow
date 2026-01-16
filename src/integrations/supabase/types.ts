@@ -490,6 +490,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          font_size: string | null
+          haptic_feedback: boolean | null
+          id: string
+          profile_visible: boolean | null
+          read_receipts: boolean | null
+          show_activity_status: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          font_size?: string | null
+          haptic_feedback?: boolean | null
+          id?: string
+          profile_visible?: boolean | null
+          read_receipts?: boolean | null
+          show_activity_status?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          font_size?: string | null
+          haptic_feedback?: boolean | null
+          id?: string
+          profile_visible?: boolean | null
+          read_receipts?: boolean | null
+          show_activity_status?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
