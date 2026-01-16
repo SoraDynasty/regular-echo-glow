@@ -57,6 +57,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        ellie: {
+          bg: "hsl(var(--ellie-bg))",
+          primary: "hsl(var(--ellie-primary))",
+          secondary: "hsl(var(--ellie-secondary))",
+        },
       },
       fontFamily: {
         marker: ["Permanent Marker", "cursive"],

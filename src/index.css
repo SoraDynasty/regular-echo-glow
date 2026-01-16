@@ -58,6 +58,11 @@ All colors MUST be HSL.
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Ellie Research Theme - Soft Amethyst */
+    --ellie-bg: 0 0% 98%;
+    --ellie-primary: 270 91% 55%;
+    --ellie-secondary: 270 100% 95%;
   }
 
   .light {
@@ -99,6 +104,11 @@ All colors MUST be HSL.
     --shadow-regulus: 0 0 30px hsla(211, 85%, 55%, 0.25);
     --shadow-ghost: 0 0 20px hsla(220, 10%, 40%, 0.15);
     --shadow-card: 0 10px 40px hsla(0, 0%, 0%, 0.1);
+
+    /* Ellie Research Theme - same in light mode */
+    --ellie-bg: 0 0% 98%;
+    --ellie-primary: 270 91% 55%;
+    --ellie-secondary: 270 100% 95%;
   }
 }
 
