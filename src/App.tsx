@@ -24,6 +24,8 @@ import CommunityDetail from "./pages/CommunityDetail";
 import CommunitySettings from "./pages/CommunitySettings";
 import Subscribe from "./pages/Subscribe";
 import Settings from "./pages/Settings";
+import AppearanceSettings from "./pages/AppearanceSettings";
+import PrivacySecuritySettings from "./pages/PrivacySecuritySettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,9 @@ const AnimatedRoutes = () => {
         <Route path="/community/:id/settings" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
         <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/settings/appearance" element={<ProtectedRoute><AppearanceSettings /></ProtectedRoute>} />
+        <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySecuritySettings /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PageTransition>
