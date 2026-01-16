@@ -454,6 +454,36 @@ export type Database = {
           },
         ]
       }
+      research_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          query: string
+          related_questions: Json | null
+          response: string
+          sources: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          query: string
+          related_questions?: Json | null
+          response: string
+          sources?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          query?: string
+          related_questions?: Json | null
+          response?: string
+          sources?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
