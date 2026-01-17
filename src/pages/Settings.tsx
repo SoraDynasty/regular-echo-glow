@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Crown, CreditCard, User, Bell, Shield, Palette } from "lucide-react";
+import { ArrowLeft, Crown, CreditCard, User, Bell, Shield, Palette, Search } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 
 const Settings = () => {
@@ -60,6 +60,19 @@ const Settings = () => {
           >
             <Palette className="w-5 h-5" />
             Appearance
+          </Button>
+        </section>
+
+        {/* Tools Section */}
+        <section className="glass-card p-4 rounded-2xl space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Tools</h2>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 h-12"
+            onClick={() => navigate("/ellie-research")}
+          >
+            <Search className="w-5 h-5" />
+            Ellie Research
           </Button>
         </section>
 

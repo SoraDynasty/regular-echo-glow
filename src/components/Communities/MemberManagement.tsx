@@ -153,7 +153,7 @@ export const MemberManagement = ({
             <CardContent className="p-3 flex items-center gap-3">
               <Avatar
                 className="w-12 h-12 cursor-pointer ring-2 ring-transparent hover:ring-primary/50 transition-all"
-                onClick={() => navigate(`/profile/${member.user_id}`)}
+                onClick={() => navigate(`/user/${member.user_id}`)}
               >
                 <AvatarImage src={member.profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary">
