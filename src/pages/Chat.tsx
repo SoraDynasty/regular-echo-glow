@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
-import { Search, Send, Sparkles } from "lucide-react";
+import { Search, Send, Sparkles, Brain } from "lucide-react";
 import { toast } from "sonner";
 import MobileNav from "@/components/MobileNav";
-import EllieFloatingIcon from "@/components/Ellie/EllieFloatingIcon";
+import { Button } from "@/components/ui/button";
 
 interface Profile {
   id: string;
@@ -184,6 +184,15 @@ const Chat = () => {
               className="pl-10 h-11 rounded-xl"
             />
           </div>
+
+          {/* Ellie Research Button */}
+          <Button
+            onClick={() => navigate("/ellie-research")}
+            className="w-full mt-3 h-12 gap-2 bg-ellie-primary hover:bg-ellie-primary/90"
+          >
+            <Brain className="w-5 h-5" />
+            Ellie Research
+          </Button>
         </div>
       </header>
 
@@ -271,7 +280,6 @@ const Chat = () => {
       </main>
 
       <MobileNav />
-      <EllieFloatingIcon />
     </div>
   );
 };
