@@ -8,6 +8,7 @@ import PostCard from "@/components/PostCard";
 import MobileNav from "@/components/MobileNav";
 import NotificationBell from "@/components/Notifications/NotificationBell";
 import LoadingAnimation from "@/components/LoadingAnimation";
+import StoriesRow from "@/components/Stories/StoriesRow";
 import { useTheme } from "@/hooks/use-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import type { Database } from "@/integrations/supabase/types";
@@ -137,56 +138,61 @@ const Feed = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-8 pb-24 md:pb-8">
-        {/* Create Post Button - Hidden on mobile, shown on desktop */}
-        <div className="mb-6 md:mb-8 text-center hidden md:block">
-          <Button
-            size="lg"
-            variant={profile?.account_type === "regulus" ? "regulus" : "ghostmode"}
-            className="gap-2"
-            onClick={() => toast.info("Camera feature coming soon!")}
-          >
-            <Camera className="w-5 h-5" />
-            Capture Your Regular
-          </Button>
-          <p className="text-sm text-muted-foreground mt-3">
-            Share what you're doing right now
-          </p>
-        </div>
-
-        {/* Posts Feed */}
-        {loading ? (
-          <LoadingAnimation />
-        ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-            <h3 className="text-xl md:text-2xl font-semibold mb-3">
-              Wow, it's really calm in here!
-            </h3>
-            <p className="text-muted-foreground mb-8 max-w-xs">
-              Your friends haven't posted their Regular yet. Be the first one.
-            </p>
+      <main className="max-w-4xl mx-auto py-4 md:py-8 pb-24 md:pb-8">
+        {/* Stories Row */}
+        <StoriesRow />
+        
+        <div className="px-4 md:px-6">
+          {/* Create Post Button - Hidden on mobile, shown on desktop */}
+          <div className="mb-6 md:mb-8 text-center hidden md:block">
             <Button
-              variant="outline"
               size="lg"
+              variant={profile?.account_type === "regulus" ? "regulus" : "ghostmode"}
+              className="gap-2"
               onClick={() => navigate("/capture")}
-              className="rounded-full px-8 py-6 text-base font-medium border-2"
             >
-              Capture your Regular.
+              <Camera className="w-5 h-5" />
+              Capture Your Regular
             </Button>
+            <p className="text-sm text-muted-foreground mt-3">
+              Share what you're doing right now
+            </p>
           </div>
-        ) : (
-          <div className="space-y-4 md:space-y-6">
-            {posts.map((post) => (
-              <PostCard 
-                key={post.id} 
-                post={post} 
-                onReaction={loadFeed}
-                onPostDeleted={loadFeed}
-                onPostUpdated={loadFeed}
-              />
-            ))}
-          </div>
-        )}
+
+          {/* Posts Feed */}
+          {loading ? (
+            <LoadingAnimation />
+          ) : posts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+              <h3 className="text-xl md:text-2xl font-semibold mb-3">
+                Wow, it's really calm in here!
+              </h3>
+              <p className="text-muted-foreground mb-8 max-w-xs">
+                Your friends haven't posted their Regular yet. Be the first one.
+              </p>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate("/capture")}
+                className="rounded-full px-8 py-6 text-base font-medium border-2"
+              >
+                Capture your Regular.
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 md:space-y-6">
+              {posts.map((post) => (
+                <PostCard 
+                  key={post.id} 
+                  post={post} 
+                  onReaction={loadFeed}
+                  onPostDeleted={loadFeed}
+                  onPostUpdated={loadFeed}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       <MobileNav />
