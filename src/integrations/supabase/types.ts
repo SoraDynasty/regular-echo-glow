@@ -484,6 +484,41 @@ export type Database = {
         }
         Relationships: []
       }
+      stories: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          media_url: string
+          user_id: string
+          viewed_by: Json | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_url: string
+          user_id: string
+          viewed_by?: Json | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_url?: string
+          user_id?: string
+          viewed_by?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
