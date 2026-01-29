@@ -8,6 +8,7 @@ import { ThemeProvider } from "./hooks/use-theme";
 import { EllieProvider } from "./contexts/EllieContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PageTransition from "./components/PageTransition";
+import EllieFloatingIcon from "./components/Ellie/EllieFloatingIcon";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
@@ -71,6 +72,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AnimatedRoutes />
+            <EllieFloatingIcon />
           </BrowserRouter>
         </TooltipProvider>
       </EllieProvider>
