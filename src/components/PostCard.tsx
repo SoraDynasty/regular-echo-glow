@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Eye, Flame, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
@@ -299,18 +299,6 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
             variant="ghost"
             size="sm"
             disabled={reacting}
-            onClick={() => handleReaction("fire")}
-            className="gap-1 h-10 md:h-9"
-          >
-            <Flame className="w-4 h-4 md:w-5 md:h-5" />
-            {getReactionCount("fire") > 0 && (
-              <span className="text-xs">{getReactionCount("fire")}</span>
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={reacting}
             onClick={() => handleReaction("eyes")}
             className="gap-1 h-10 md:h-9"
           >
@@ -337,6 +325,16 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
             <span className="font-semibold mr-2">{post.profiles.username}</span>
             {post.caption}
           </p>
+        )}
+
+        {/* Comment preview when collapsed */}
+        {!showComments && commentCount > 0 && (
+          <button
+            onClick={() => setShowComments(true)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
+          >
+            View {commentCount} comment{commentCount > 1 ? "s" : ""}
+          </button>
         )}
 
         {/* Comments Section */}
