@@ -72,29 +72,81 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     if (!userMessage || isLoading) return;
     
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    const newMessages = [...messages, { role: "user" as const, content: userMessage }];
+    setMessages(newMessages);
     setIsLoading(true);
     onStateChange("cooking");
 
     try {
-      const { data, error } = await supabase.functions.invoke("ellie-chat", {
-        body: {
-          messages: [...messages, { role: "user", content: userMessage }],
-          mood
+      // Add placeholder for streaming response
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ellie-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: newMessages,
+            mood,
+            stream: true
+          }),
         }
-      });
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       onStateChange("responding");
-      setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
+      
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullMessage = "";
 
-      if (data.message) {
-        await generateSpeech(data.message);
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content || "";
+                if (content) {
+                  fullMessage += content;
+                  setMessages(prev => {
+                    const updated = [...prev];
+                    updated[updated.length - 1] = { role: "assistant", content: fullMessage };
+                    return updated;
+                  });
+                }
+              } catch {
+                // Skip invalid JSON chunks
+              }
+            }
+          }
+        }
+      }
+
+      if (fullMessage) {
+        await generateSpeech(fullMessage);
       }
     } catch (error) {
       console.error("Ellie chat error:", error);
       toast.error("Something went wrong. Try again?");
+      // Remove empty assistant message on error
+      setMessages(prev => prev.filter(m => m.content !== ""));
     } finally {
       setIsLoading(false);
       onStateChange("idle");
