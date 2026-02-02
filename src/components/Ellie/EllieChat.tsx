@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,11 +50,18 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [mood, setMood] = useState<EllieMood>("default");
   const [showMoodSelector, setShowMoodSelector] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Load conversation on mount
+  useEffect(() => {
+    loadConversation();
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -66,8 +73,103 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     audioPlayerRef.current = new AudioPlayer();
     return () => {
       audioPlayerRef.current?.stop();
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Save conversation whenever messages change (debounced)
+  const saveConversation = useCallback(async (msgs: Message[], currentMood: EllieMood, convId: string | null) => {
+    if (msgs.length === 0) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (convId) {
+        // Update existing conversation
+        await supabase
+          .from('ellie_conversations')
+          .update({ messages: msgs, mood: currentMood })
+          .eq('id', convId);
+      } else {
+        // Create new conversation
+        const { data, error } = await supabase
+          .from('ellie_conversations')
+          .insert({ user_id: user.id, messages: msgs, mood: currentMood })
+          .select('id')
+          .single();
+
+        if (!error && data) {
+          setConversationId(data.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving conversation:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    // Debounce save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveConversation(messages, mood, conversationId);
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [messages, mood, conversationId, saveConversation]);
+
+  const loadConversation = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get most recent conversation
+      const { data, error } = await supabase
+        .from('ellie_conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data) {
+        setMessages(data.messages as Message[]);
+        setMood(data.mood as EllieMood);
+        setConversationId(data.id);
+      }
+    } catch (error) {
+      // No conversation found, start fresh
+      console.log('No existing conversation found');
+    }
+  };
+
+  const clearConversation = async () => {
+    try {
+      if (conversationId) {
+        await supabase
+          .from('ellie_conversations')
+          .delete()
+          .eq('id', conversationId);
+      }
+      setMessages([]);
+      setConversationId(null);
+      haptics.medium();
+      toast.success("Conversation cleared");
+    } catch (error) {
+      console.error('Error clearing conversation:', error);
+      toast.error("Couldn't clear conversation");
+    }
+  };
 
   const sendMessage = async (messageText?: string) => {
     const userMessage = messageText || input.trim();
@@ -305,12 +407,25 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
             </div>
           </div>
           
-          <button
-            onClick={() => setShowMoodSelector(!showMoodSelector)}
-            className={`text-xs px-3 py-1.5 rounded-full ${currentMood.color} text-white flex items-center gap-1`}
-          >
-            {currentMood.emoji} {currentMood.label}
-          </button>
+          <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearConversation}
+                className="rounded-full text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+            
+            <button
+              onClick={() => setShowMoodSelector(!showMoodSelector)}
+              className={`text-xs px-3 py-1.5 rounded-full ${currentMood.color} text-white flex items-center gap-1`}
+            >
+              {currentMood.emoji} {currentMood.label}
+            </button>
+          </div>
         </div>
         
         {/* Mood Selector */}
