@@ -151,6 +151,8 @@ REGULARGRAM CONTEXT:
 
 You're a powerful AI assistant AND a chill digital buddy. Help with real tasks while keeping the vibes immaculate.${activityContext}`;
 
+    const { stream = false } = await req.json().catch(() => ({}));
+    
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -164,7 +166,8 @@ You're a powerful AI assistant AND a chill digital buddy. Help with real tasks w
           ...messages
         ],
         temperature: 0.8,
-        max_tokens: 2000
+        max_tokens: 2000,
+        stream: stream
       }),
     });
 
@@ -184,6 +187,19 @@ You're a powerful AI assistant AND a chill digital buddy. Help with real tasks w
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
+    // Handle streaming response
+    if (stream) {
+      return new Response(response.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    // Handle non-streaming response
     const data = await response.json();
     const message = data.choices?.[0]?.message?.content || "Yo, something went wrong. Can you try that again?";
 
