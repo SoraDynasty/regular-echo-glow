@@ -45,6 +45,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [mood, setMood] = useState<EllieMood>("default");
@@ -53,6 +54,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -75,7 +77,11 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     const newMessages = [...messages, { role: "user" as const, content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
+    setIsStreaming(true);
     onStateChange("cooking");
+
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     try {
       // Add placeholder for streaming response
@@ -94,6 +100,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
             mood,
             stream: true
           }),
+          signal: abortControllerRef.current.signal,
         }
       );
 
@@ -108,48 +115,70 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
       let fullMessage = "";
 
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
 
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") continue;
 
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content || "";
-                if (content) {
-                  fullMessage += content;
-                  setMessages(prev => {
-                    const updated = [...prev];
-                    updated[updated.length - 1] = { role: "assistant", content: fullMessage };
-                    return updated;
-                  });
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content || "";
+                  if (content) {
+                    fullMessage += content;
+                    setMessages(prev => {
+                      const updated = [...prev];
+                      updated[updated.length - 1] = { role: "assistant", content: fullMessage };
+                      return updated;
+                    });
+                  }
+                } catch {
+                  // Skip invalid JSON chunks
                 }
-              } catch {
-                // Skip invalid JSON chunks
               }
             }
+          }
+        } catch (readError) {
+          if (readError instanceof Error && readError.name === 'AbortError') {
+            console.log("Stream aborted by user");
+          } else {
+            throw readError;
           }
         }
       }
 
-      if (fullMessage) {
+      if (fullMessage && !abortControllerRef.current?.signal.aborted) {
         await generateSpeech(fullMessage);
       }
     } catch (error) {
-      console.error("Ellie chat error:", error);
-      toast.error("Something went wrong. Try again?");
-      // Remove empty assistant message on error
-      setMessages(prev => prev.filter(m => m.content !== ""));
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log("Request aborted by user");
+        toast.success("Generation stopped");
+      } else {
+        console.error("Ellie chat error:", error);
+        toast.error("Something went wrong. Try again?");
+        // Remove empty assistant message on error
+        setMessages(prev => prev.filter(m => m.content !== ""));
+      }
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      abortControllerRef.current = null;
       onStateChange("idle");
+    }
+  };
+
+  const stopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      haptics.medium();
     }
   };
 
@@ -395,11 +424,15 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           />
           
           {isSpeaking ? (
-            <Button onClick={stopSpeaking} size="icon" className="rounded-full w-12 h-12 bg-red-500 hover:bg-red-600">
+            <Button onClick={stopSpeaking} size="icon" className="rounded-full w-12 h-12 bg-destructive hover:bg-destructive/90">
               <Volume2 className="w-5 h-5 animate-pulse" />
             </Button>
           ) : isRecording ? (
-            <Button onClick={stopRecording} size="icon" className="rounded-full w-12 h-12 bg-red-500 hover:bg-red-600 animate-pulse">
+            <Button onClick={stopRecording} size="icon" className="rounded-full w-12 h-12 bg-destructive hover:bg-destructive/90 animate-pulse">
+              <Square className="w-5 h-5" />
+            </Button>
+          ) : isStreaming ? (
+            <Button onClick={stopGeneration} size="icon" className="rounded-full w-12 h-12 bg-destructive hover:bg-destructive/90">
               <Square className="w-5 h-5" />
             </Button>
           ) : (
