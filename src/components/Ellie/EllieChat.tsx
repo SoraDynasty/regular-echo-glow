@@ -586,6 +586,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           )}
         </div>
       </div>
+      {showHistory && (
+        <ConversationHistory
+          currentConversationId={conversationId}
+          onSelectConversation={switchToConversation}
+          onNewConversation={startNewConversation}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   );
 };
