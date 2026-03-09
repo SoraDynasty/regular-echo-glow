@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AudioRecorder, AudioPlayer } from "@/lib/audioUtils";
 import { haptics } from "@/lib/haptics";
+import ConversationHistory from "./ConversationHistory";
 
 type Message = {
   role: "user" | "assistant";
