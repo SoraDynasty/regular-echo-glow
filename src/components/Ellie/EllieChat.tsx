@@ -424,6 +424,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowHistory(true)}
+              className="rounded-full text-muted-foreground"
+            >
+              <History className="w-4 h-4" />
+            </Button>
             {messages.length > 0 && (
               <Button
                 variant="ghost"
