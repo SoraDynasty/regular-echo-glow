@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2 } from "lucide-react";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AudioRecorder, AudioPlayer } from "@/lib/audioUtils";
 import { haptics } from "@/lib/haptics";
+import ConversationHistory from "./ConversationHistory";
 
 type Message = {
   role: "user" | "assistant";
@@ -50,6 +51,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [mood, setMood] = useState<EllieMood>("default");
   const [showMoodSelector, setShowMoodSelector] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
@@ -169,6 +171,20 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
       console.error('Error clearing conversation:', error);
       toast.error("Couldn't clear conversation");
     }
+  };
+
+  const startNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setMood("default");
+    haptics.light();
+  };
+
+  const switchToConversation = (conv: { id: string; messages: any; mood: string }) => {
+    setMessages(conv.messages as Message[]);
+    setMood(conv.mood as EllieMood);
+    setConversationId(conv.id);
+    haptics.light();
   };
 
   const sendMessage = async (messageText?: string) => {
@@ -408,6 +424,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowHistory(true)}
+              className="rounded-full text-muted-foreground"
+            >
+              <History className="w-4 h-4" />
+            </Button>
             {messages.length > 0 && (
               <Button
                 variant="ghost"
@@ -562,6 +586,14 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
           )}
         </div>
       </div>
+      {showHistory && (
+        <ConversationHistory
+          currentConversationId={conversationId}
+          onSelectConversation={switchToConversation}
+          onNewConversation={startNewConversation}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   );
 };
