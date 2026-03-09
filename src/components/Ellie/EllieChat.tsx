@@ -51,6 +51,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [mood, setMood] = useState<EllieMood>("default");
   const [showMoodSelector, setShowMoodSelector] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRecorderRef = useRef<AudioRecorder | null>(null);
