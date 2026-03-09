@@ -173,6 +173,20 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
     }
   };
 
+  const startNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setMood("default");
+    haptics.light();
+  };
+
+  const switchToConversation = (conv: { id: string; messages: any; mood: string }) => {
+    setMessages(conv.messages as Message[]);
+    setMood(conv.mood as EllieMood);
+    setConversationId(conv.id);
+    haptics.light();
+  };
+
   const sendMessage = async (messageText?: string) => {
     const userMessage = messageText || input.trim();
     if (!userMessage || isLoading) return;
