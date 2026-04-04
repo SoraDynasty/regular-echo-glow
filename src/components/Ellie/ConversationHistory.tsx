@@ -170,7 +170,7 @@ const ConversationHistory = ({
               </p>
             </div>
           ) : (
-            conversations.map((conv) => (
+            filteredConversations.map((conv) => (
               <button
                 key={conv.id}
                 onClick={() => {
