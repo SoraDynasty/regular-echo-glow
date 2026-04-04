@@ -71,7 +71,7 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
       setTimeout(() => setShowHeartAnimation(false), 800);
     }
     lastTapRef.current = now;
-  }, [currentUserId, localReactions]);
+  }, [handleReaction, hasUserReacted]);
 
   useEffect(() => {
     loadCommentCount();
