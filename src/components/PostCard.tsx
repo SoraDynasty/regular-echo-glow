@@ -212,6 +212,18 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
     );
   };
 
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!hasUserReacted("love")) {
+        handleReaction("love");
+      }
+      setShowHeartAnimation(true);
+      setTimeout(() => setShowHeartAnimation(false), 800);
+    }
+    lastTapRef.current = now;
+  };
+
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
     
