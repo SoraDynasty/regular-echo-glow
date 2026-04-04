@@ -46,6 +46,7 @@ const ConversationHistory = ({
 }: ConversationHistoryProps) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     loadConversations();
