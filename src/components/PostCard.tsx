@@ -41,13 +41,14 @@ type Post = Database["public"]["Tables"]["posts"]["Row"] & {
 
 interface PostCardProps {
   post: Post;
-  onReaction: () => void;
+  onReaction?: () => void;
   onPostDeleted?: () => void;
   onPostUpdated?: () => void;
 }
 
 const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardProps) => {
   const [reacting, setReacting] = useState(false);
+  const [localReactions, setLocalReactions] = useState(post.reactions || []);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [badges, setBadges] = useState<any[]>([]);
@@ -143,23 +144,37 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
         return;
       }
 
-      // Check if user already reacted with this type
-      const existingReaction = post.reactions.find(
+      const existingReaction = localReactions.find(
         (r) => r.user_id === session.user.id && r.reaction_type === reactionType
       );
 
       if (existingReaction) {
-        // Remove reaction
+        // Optimistic remove
+        setLocalReactions(prev => prev.filter(r => r.id !== existingReaction.id));
         await supabase.from("reactions").delete().eq("id", existingReaction.id);
       } else {
-        // Add reaction
-        await supabase.from("reactions").insert({
+        // Optimistic add
+        const tempId = crypto.randomUUID();
+        const optimistic = {
+          id: tempId,
           post_id: post.id,
           user_id: session.user.id,
           reaction_type: reactionType,
-        });
-        
-        // Create notification for post owner
+          created_at: new Date().toISOString(),
+        };
+        setLocalReactions(prev => [...prev, optimistic]);
+
+        const { data } = await supabase.from("reactions").insert({
+          post_id: post.id,
+          user_id: session.user.id,
+          reaction_type: reactionType,
+        }).select().single();
+
+        // Replace temp with real
+        if (data) {
+          setLocalReactions(prev => prev.map(r => r.id === tempId ? data : r));
+        }
+
         if (session.user.id !== post.user_id) {
           await supabase.from("notifications").insert({
             user_id: post.user_id,
@@ -173,8 +188,10 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
         haptics.success();
       }
 
-      onReaction();
-    } catch (error: any) {
+      onReaction?.();
+    } catch {
+      // Revert on error
+      setLocalReactions(post.reactions || []);
       haptics.error();
       toast.error("Failed to react");
     } finally {
@@ -183,14 +200,13 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   };
 
   const getReactionCount = (type: string) => {
-    return post.reactions.filter((r) => r.reaction_type === type).length;
+    return localReactions.filter((r) => r.reaction_type === type).length;
   };
 
-  const hasUserReacted = async (type: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
-    return post.reactions.some(
-      (r) => r.user_id === session.user.id && r.reaction_type === type
+  const hasUserReacted = (type: string) => {
+    if (!currentUserId) return false;
+    return localReactions.some(
+      (r) => r.user_id === currentUserId && r.reaction_type === type
     );
   };
 
@@ -288,9 +304,9 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("love")}
-            className="gap-1 h-10 md:h-9"
+            className={`gap-1 h-10 md:h-9 ${hasUserReacted("love") ? "text-red-500" : ""}`}
           >
-            <Heart className="w-4 h-4 md:w-5 md:h-5" />
+            <Heart className={`w-4 h-4 md:w-5 md:h-5 ${hasUserReacted("love") ? "fill-current" : ""}`} />
             {getReactionCount("love") > 0 && (
               <span className="text-xs">{getReactionCount("love")}</span>
             )}
@@ -300,7 +316,7 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("eyes")}
-            className="gap-1 h-10 md:h-9"
+            className={`gap-1 h-10 md:h-9 ${hasUserReacted("eyes") ? "text-primary" : ""}`}
           >
             <Eye className="w-4 h-4 md:w-5 md:h-5" />
             {getReactionCount("eyes") > 0 && (
