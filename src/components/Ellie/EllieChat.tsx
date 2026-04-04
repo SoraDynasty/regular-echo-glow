@@ -58,7 +58,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   const audioPlayerRef = useRef<AudioPlayer | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load conversation on mount
   useEffect(() => {

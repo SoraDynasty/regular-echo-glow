@@ -16,7 +16,7 @@ const EllieCall = ({ onClose, agentId }: EllieCallProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const chimeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const conversation = useConversation({
     onConnect: () => {
