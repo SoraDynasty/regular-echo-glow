@@ -58,6 +58,20 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const [editCaption, setEditCaption] = useState(post.caption || "");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showHeartAnimation, setShowHeartAnimation] = useState(false);
+  const lastTapRef = useRef<number>(0);
+
+  const handleDoubleTap = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!hasUserReacted("love")) {
+        handleReaction("love");
+      }
+      setShowHeartAnimation(true);
+      setTimeout(() => setShowHeartAnimation(false), 800);
+    }
+    lastTapRef.current = now;
+  }, [currentUserId, localReactions]);
 
   useEffect(() => {
     loadCommentCount();
