@@ -304,9 +304,9 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("love")}
-            className="gap-1 h-10 md:h-9"
+            className={`gap-1 h-10 md:h-9 ${hasUserReacted("love") ? "text-red-500" : ""}`}
           >
-            <Heart className="w-4 h-4 md:w-5 md:h-5" />
+            <Heart className={`w-4 h-4 md:w-5 md:h-5 ${hasUserReacted("love") ? "fill-current" : ""}`} />
             {getReactionCount("love") > 0 && (
               <span className="text-xs">{getReactionCount("love")}</span>
             )}
@@ -316,7 +316,7 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
             size="sm"
             disabled={reacting}
             onClick={() => handleReaction("eyes")}
-            className="gap-1 h-10 md:h-9"
+            className={`gap-1 h-10 md:h-9 ${hasUserReacted("eyes") ? "text-primary" : ""}`}
           >
             <Eye className="w-4 h-4 md:w-5 md:h-5" />
             {getReactionCount("eyes") > 0 && (
