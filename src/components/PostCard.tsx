@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
@@ -58,6 +58,8 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const [editCaption, setEditCaption] = useState(post.caption || "");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showHeartAnimation, setShowHeartAnimation] = useState(false);
+  const lastTapRef = useRef<number>(0);
 
   useEffect(() => {
     loadCommentCount();
@@ -210,6 +212,18 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
     );
   };
 
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      if (!hasUserReacted("love")) {
+        handleReaction("love");
+      }
+      setShowHeartAnimation(true);
+      setTimeout(() => setShowHeartAnimation(false), 800);
+    }
+    lastTapRef.current = now;
+  };
+
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
     
@@ -271,12 +285,13 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
       </div>
 
       {/* Media */}
-      <div className="relative aspect-square bg-muted">
+      <div className="relative aspect-square bg-muted" onClick={handleDoubleTap}>
         <img
           src={post.front_media_url}
           alt="Post"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover select-none"
           loading="lazy"
+          draggable={false}
           onError={(e) => {
             e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop";
           }}
@@ -292,6 +307,11 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
                 e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&auto=format&fit=crop";
               }}
             />
+          </div>
+        )}
+        {showHeartAnimation && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Heart className="w-20 h-20 text-red-500 fill-red-500 animate-ping" />
           </div>
         )}
       </div>
