@@ -61,18 +61,6 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const [showHeartAnimation, setShowHeartAnimation] = useState(false);
   const lastTapRef = useRef<number>(0);
 
-  const handleDoubleTap = useCallback(() => {
-    const now = Date.now();
-    if (now - lastTapRef.current < 300) {
-      if (!hasUserReacted("love")) {
-        handleReaction("love");
-      }
-      setShowHeartAnimation(true);
-      setTimeout(() => setShowHeartAnimation(false), 800);
-    }
-    lastTapRef.current = now;
-  }, [handleReaction, hasUserReacted]);
-
   useEffect(() => {
     loadCommentCount();
     loadUserBadges();
