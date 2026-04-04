@@ -144,23 +144,37 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
         return;
       }
 
-      // Check if user already reacted with this type
-      const existingReaction = post.reactions.find(
+      const existingReaction = localReactions.find(
         (r) => r.user_id === session.user.id && r.reaction_type === reactionType
       );
 
       if (existingReaction) {
-        // Remove reaction
+        // Optimistic remove
+        setLocalReactions(prev => prev.filter(r => r.id !== existingReaction.id));
         await supabase.from("reactions").delete().eq("id", existingReaction.id);
       } else {
-        // Add reaction
-        await supabase.from("reactions").insert({
+        // Optimistic add
+        const tempId = crypto.randomUUID();
+        const optimistic = {
+          id: tempId,
           post_id: post.id,
           user_id: session.user.id,
           reaction_type: reactionType,
-        });
-        
-        // Create notification for post owner
+          created_at: new Date().toISOString(),
+        };
+        setLocalReactions(prev => [...prev, optimistic]);
+
+        const { data } = await supabase.from("reactions").insert({
+          post_id: post.id,
+          user_id: session.user.id,
+          reaction_type: reactionType,
+        }).select().single();
+
+        // Replace temp with real
+        if (data) {
+          setLocalReactions(prev => prev.map(r => r.id === tempId ? data : r));
+        }
+
         if (session.user.id !== post.user_id) {
           await supabase.from("notifications").insert({
             user_id: post.user_id,
@@ -174,8 +188,10 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
         haptics.success();
       }
 
-      onReaction();
-    } catch (error: any) {
+      onReaction?.();
+    } catch {
+      // Revert on error
+      setLocalReactions(post.reactions || []);
       haptics.error();
       toast.error("Failed to react");
     } finally {
