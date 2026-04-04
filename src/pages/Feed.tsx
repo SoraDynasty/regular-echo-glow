@@ -185,7 +185,7 @@ const Feed = () => {
                 <PostCard 
                   key={post.id} 
                   post={post} 
-                  onReaction={loadFeed}
+                  onReaction={() => {}}
                   onPostDeleted={loadFeed}
                   onPostUpdated={loadFeed}
                 />
