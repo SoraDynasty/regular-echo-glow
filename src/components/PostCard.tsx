@@ -41,13 +41,14 @@ type Post = Database["public"]["Tables"]["posts"]["Row"] & {
 
 interface PostCardProps {
   post: Post;
-  onReaction: () => void;
+  onReaction?: () => void;
   onPostDeleted?: () => void;
   onPostUpdated?: () => void;
 }
 
 const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardProps) => {
   const [reacting, setReacting] = useState(false);
+  const [localReactions, setLocalReactions] = useState(post.reactions || []);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [badges, setBadges] = useState<any[]>([]);
