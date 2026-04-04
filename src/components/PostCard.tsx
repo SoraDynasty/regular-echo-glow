@@ -285,12 +285,13 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
       </div>
 
       {/* Media */}
-      <div className="relative aspect-square bg-muted">
+      <div className="relative aspect-square bg-muted" onClick={handleDoubleTap}>
         <img
           src={post.front_media_url}
           alt="Post"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover select-none"
           loading="lazy"
+          draggable={false}
           onError={(e) => {
             e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop";
           }}
@@ -306,6 +307,11 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
                 e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&auto=format&fit=crop";
               }}
             />
+          </div>
+        )}
+        {showHeartAnimation && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Heart className="w-20 h-20 text-red-500 fill-red-500 animate-ping" />
           </div>
         )}
       </div>
