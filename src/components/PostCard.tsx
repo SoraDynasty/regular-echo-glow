@@ -200,14 +200,13 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   };
 
   const getReactionCount = (type: string) => {
-    return post.reactions.filter((r) => r.reaction_type === type).length;
+    return localReactions.filter((r) => r.reaction_type === type).length;
   };
 
-  const hasUserReacted = async (type: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
-    return post.reactions.some(
-      (r) => r.user_id === session.user.id && r.reaction_type === type
+  const hasUserReacted = (type: string) => {
+    if (!currentUserId) return false;
+    return localReactions.some(
+      (r) => r.user_id === currentUserId && r.reaction_type === type
     );
   };
 
