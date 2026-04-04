@@ -109,6 +109,14 @@ const ConversationHistory = ({
     return date.toLocaleDateString();
   };
 
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations;
+    const q = searchQuery.toLowerCase();
+    return conversations.filter((conv) =>
+      conv.messages?.some((m) => m.content.toLowerCase().includes(q))
+    );
+  }, [conversations, searchQuery]);
+
   return (
     <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-xl flex flex-col">
       {/* Header */}
@@ -133,6 +141,20 @@ const ConversationHistory = ({
         </div>
       </header>
 
+      {/* Search */}
+      <div className="px-4 pt-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 h-10 rounded-xl bg-muted/50 border-border/50"
+          />
+        </div>
+      </div>
+
       {/* List */}
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-2">
@@ -140,10 +162,12 @@ const ConversationHistory = ({
             <div className="flex justify-center py-12">
               <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : conversations.length === 0 ? (
+          ) : filteredConversations.length === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground text-sm">No conversations yet</p>
+              <p className="text-muted-foreground text-sm">
+                {searchQuery ? "No matching conversations" : "No conversations yet"}
+              </p>
             </div>
           ) : (
             conversations.map((conv) => (
