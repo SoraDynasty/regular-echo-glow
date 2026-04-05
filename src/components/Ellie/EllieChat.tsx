@@ -406,7 +406,7 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className={embedded ? "flex flex-col h-full" : "fixed inset-0 z-50 bg-background flex flex-col"}>
       {/* Header */}
       <header className="safe-area-top px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="flex items-center gap-3">

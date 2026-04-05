@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun } from "lucide-react";
+import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import PostCard from "@/components/PostCard";
 import MobileNav from "@/components/MobileNav";
@@ -11,6 +11,7 @@ import LoadingAnimation from "@/components/LoadingAnimation";
 import StoriesRow from "@/components/Stories/StoriesRow";
 import { useTheme } from "@/hooks/use-theme";
 import { useSwipe } from "@/hooks/use-swipe";
+import { haptics } from "@/lib/haptics";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -27,7 +28,7 @@ const Feed = () => {
 
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => navigate("/profile"),
-    onSwipeRight: () => {}, // Can add more swipe actions
+    onSwipeRight: () => {},
   });
 
   useEffect(() => {
@@ -37,21 +38,9 @@ const Feed = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-
-    // Load user profile
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profileData) {
-      setProfile(profileData);
-    }
+    if (!session) { navigate("/auth"); return; }
+    const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+    if (profileData) setProfile(profileData);
   };
 
   const loadFeed = async () => {
@@ -59,16 +48,11 @@ const Feed = () => {
     try {
       const { data, error } = await supabase
         .from("posts")
-        .select(`
-          *,
-          profiles (*),
-          reactions (*)
-        `)
+        .select(`*, profiles (*), reactions (*)`)
         .order("created_at", { ascending: false });
-
       if (error) throw error;
       setPosts(data as Post[]);
-    } catch (error: any) {
+    } catch {
       toast.error("Failed to load feed");
     } finally {
       setLoading(false);
@@ -80,19 +64,40 @@ const Feed = () => {
     navigate("/");
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+
+  const handleConnectWallet = () => {
+    haptics.medium();
+    toast("Wallet connection coming soon!", {
+      description: "BNB Smart Chain integration in progress.",
+      icon: "🔗",
+    });
   };
 
   return (
     <div className="min-h-screen min-h-dvh bg-background" {...swipeHandlers}>
-      {/* Header - extends behind status bar */}
+      {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/30">
         <div className="safe-area-top" />
         <div className="max-w-4xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
           <h1 className="text-xl md:text-2xl font-bold text-glow-regulus">Regulargram</h1>
           
           <div className="flex items-center gap-2 md:gap-3">
+            {/* Connect Wallet Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleConnectWallet}
+              className="rounded-full px-3 h-9 text-xs font-medium gap-1.5 transition-all"
+              style={{
+                border: "1px solid hsla(220, 10%, 45%, 0.3)",
+                background: "hsla(240, 10%, 10%, 0.5)",
+              }}
+            >
+              <Wallet className="w-3.5 h-3.5 text-secondary" />
+              <span className="hidden sm:inline text-muted-foreground">Connect</span>
+            </Button>
+
             {profile?.account_type === "regulus" ? (
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 text-sm">
                 <Sparkles className="w-4 h-4 text-primary" />
@@ -107,30 +112,13 @@ const Feed = () => {
             
             <NotificationBell />
             
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="hidden md:flex"
-            >
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="hidden md:flex">
               {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/profile")}
-              className="hidden md:flex"
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/profile")} className="hidden md:flex">
               <User className="w-5 h-5" />
             </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-              className="hidden md:flex"
-            >
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="hidden md:flex">
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
@@ -139,56 +127,31 @@ const Feed = () => {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto py-4 md:py-8 pb-24 md:pb-8">
-        {/* Stories Row */}
         <StoriesRow />
-        
         <div className="px-4 md:px-6">
-          {/* Create Post Button - Hidden on mobile, shown on desktop */}
           <div className="mb-6 md:mb-8 text-center hidden md:block">
-            <Button
-              size="lg"
-              variant={profile?.account_type === "regulus" ? "regulus" : "ghostmode"}
-              className="gap-2"
-              onClick={() => navigate("/capture")}
-            >
-              <Camera className="w-5 h-5" />
-              Capture Your Regular
+            <Button size="lg" variant={profile?.account_type === "regulus" ? "regulus" : "ghostmode"}
+              className="gap-2" onClick={() => navigate("/capture")}>
+              <Camera className="w-5 h-5" />Capture Your Regular
             </Button>
-            <p className="text-sm text-muted-foreground mt-3">
-              Share what you're doing right now
-            </p>
+            <p className="text-sm text-muted-foreground mt-3">Share what you're doing right now</p>
           </div>
 
-          {/* Posts Feed */}
           {loading ? (
             <LoadingAnimation />
           ) : posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-              <h3 className="text-xl md:text-2xl font-semibold mb-3">
-                Wow, it's really calm in here!
-              </h3>
-              <p className="text-muted-foreground mb-8 max-w-xs">
-                Your friends haven't posted their Regular yet. Be the first one.
-              </p>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => navigate("/capture")}
-                className="rounded-full px-8 py-6 text-base font-medium border-2"
-              >
+              <h3 className="text-xl md:text-2xl font-semibold mb-3">Wow, it's really calm in here!</h3>
+              <p className="text-muted-foreground mb-8 max-w-xs">Your friends haven't posted their Regular yet. Be the first one.</p>
+              <Button variant="outline" size="lg" onClick={() => navigate("/capture")}
+                className="rounded-full px-8 py-6 text-base font-medium border-2">
                 Capture your Regular.
               </Button>
             </div>
           ) : (
             <div className="space-y-4 md:space-y-6">
               {posts.map((post) => (
-                <PostCard 
-                  key={post.id} 
-                  post={post} 
-                  onReaction={() => {}}
-                  onPostDeleted={loadFeed}
-                  onPostUpdated={loadFeed}
-                />
+                <PostCard key={post.id} post={post} onReaction={() => {}} onPostDeleted={loadFeed} onPostUpdated={loadFeed} />
               ))}
             </div>
           )}
