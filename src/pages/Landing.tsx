@@ -31,17 +31,17 @@ const Landing = () => {
             />
           </div>
           
-          <h1 className="text-[3rem] leading-[1.1] sm:text-6xl md:text-7xl lg:text-8xl font-marker mb-4 md:mb-6 text-glow-regulus tracking-wider animate-scale-in px-2">
-            Regulargram
+          <h1 className="text-[2.5rem] leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl font-marker mb-4 md:mb-6 text-glow-regulus tracking-wider animate-scale-in px-2">
+            Socialize without the Noise.
           </h1>
           
           <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 md:mb-4 animate-fade-in px-4" style={{ animationDelay: '0.2s' }}>
-            Be real. Stay silent. Or shine as Regulus.
+            Powered by Ellie.
           </p>
           
           <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 md:mb-12 px-4 animate-fade-in leading-relaxed" style={{ animationDelay: '0.3s' }}>
-            Capture authentic moments when the "Now" notification hits. 
-            Choose your presence: visible as Regulus or invisible in GhostMode.
+            <span className="text-primary font-medium">GhostMode</span> — our signature tiered privacy system. 
+            <span className="text-primary font-medium"> Agentic Curation</span> — Ellie replaces the follower-trap with what actually matters.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
