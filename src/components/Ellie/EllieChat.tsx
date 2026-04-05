@@ -21,6 +21,7 @@ type EllieState = "idle" | "listening" | "cooking" | "responding" | "recording" 
 interface EllieChatProps {
   onClose: () => void;
   onStateChange: (state: EllieState) => void;
+  embedded?: boolean;
 }
 
 const moodConfig: Record<EllieMood, { label: string; emoji: string; color: string }> = {
