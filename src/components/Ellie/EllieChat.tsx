@@ -43,7 +43,7 @@ const quickPrompts = [
   { icon: Globe, label: "Research", prompt: "Help me research " },
 ];
 
-const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
+const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
