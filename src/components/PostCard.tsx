@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Eye, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Eye, MoreVertical, Pencil, Trash2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
@@ -59,6 +59,7 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showHeartAnimation, setShowHeartAnimation] = useState(false);
+  const [memeState, setMemeState] = useState<"idle" | "generating" | "done">("idle");
   const lastTapRef = useRef<number>(0);
 
   useEffect(() => {
@@ -77,17 +78,12 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', post.id);
-
+      const { error } = await supabase.from('posts').delete().eq('id', post.id);
       if (error) throw error;
-
       haptics.success();
       toast.success("Post deleted");
       onPostDeleted?.();
-    } catch (error: any) {
+    } catch {
       haptics.error();
       toast.error("Failed to delete post");
     } finally {
@@ -99,18 +95,13 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const handleSaveEdit = async () => {
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('posts')
-        .update({ caption: editCaption })
-        .eq('id', post.id);
-
+      const { error } = await supabase.from('posts').update({ caption: editCaption }).eq('id', post.id);
       if (error) throw error;
-
       haptics.success();
       toast.success("Post updated");
       setShowEditDialog(false);
       onPostUpdated?.();
-    } catch (error: any) {
+    } catch {
       haptics.error();
       toast.error("Failed to update post");
     } finally {
@@ -119,21 +110,13 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   };
 
   const loadCommentCount = async () => {
-    const { count } = await supabase
-      .from('comments')
-      .select('*', { count: 'exact', head: true })
-      .eq('post_id', post.id);
+    const { count } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id);
     setCommentCount(count || 0);
   };
 
   const loadUserBadges = async () => {
-    const { data } = await supabase
-      .from('badges')
-      .select('*')
-      .eq('user_id', post.user_id);
-    if (data) {
-      setBadges(data);
-    }
+    const { data } = await supabase.from('badges').select('*').eq('user_id', post.user_id);
+    if (data) setBadges(data);
   };
 
   const handleReaction = async (reactionType: string) => {
@@ -141,58 +124,40 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
     setReacting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("You must be logged in to react");
-        return;
-      }
+      if (!session) { toast.error("You must be logged in to react"); return; }
 
       const existingReaction = localReactions.find(
         (r) => r.user_id === session.user.id && r.reaction_type === reactionType
       );
 
       if (existingReaction) {
-        // Optimistic remove
         setLocalReactions(prev => prev.filter(r => r.id !== existingReaction.id));
         await supabase.from("reactions").delete().eq("id", existingReaction.id);
       } else {
-        // Optimistic add
         const tempId = crypto.randomUUID();
         const optimistic = {
-          id: tempId,
-          post_id: post.id,
-          user_id: session.user.id,
-          reaction_type: reactionType,
-          created_at: new Date().toISOString(),
+          id: tempId, post_id: post.id, user_id: session.user.id,
+          reaction_type: reactionType, created_at: new Date().toISOString(),
         };
         setLocalReactions(prev => [...prev, optimistic]);
 
         const { data } = await supabase.from("reactions").insert({
-          post_id: post.id,
-          user_id: session.user.id,
-          reaction_type: reactionType,
+          post_id: post.id, user_id: session.user.id, reaction_type: reactionType,
         }).select().single();
 
-        // Replace temp with real
-        if (data) {
-          setLocalReactions(prev => prev.map(r => r.id === tempId ? data : r));
-        }
+        if (data) setLocalReactions(prev => prev.map(r => r.id === tempId ? data : r));
 
         if (session.user.id !== post.user_id) {
           await supabase.from("notifications").insert({
-            user_id: post.user_id,
-            type: "reaction",
+            user_id: post.user_id, type: "reaction",
             content: `${session.user.user_metadata?.username || 'Someone'} reacted to your post`,
-            related_post_id: post.id,
-            related_user_id: session.user.id
+            related_post_id: post.id, related_user_id: session.user.id
           });
         }
-        
         haptics.success();
       }
-
       onReaction?.();
     } catch {
-      // Revert on error
       setLocalReactions(post.reactions || []);
       haptics.error();
       toast.error("Failed to react");
@@ -201,32 +166,34 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
     }
   };
 
-  const getReactionCount = (type: string) => {
-    return localReactions.filter((r) => r.reaction_type === type).length;
-  };
-
+  const getReactionCount = (type: string) => localReactions.filter((r) => r.reaction_type === type).length;
   const hasUserReacted = (type: string) => {
     if (!currentUserId) return false;
-    return localReactions.some(
-      (r) => r.user_id === currentUserId && r.reaction_type === type
-    );
+    return localReactions.some((r) => r.user_id === currentUserId && r.reaction_type === type);
   };
 
   const handleDoubleTap = () => {
     const now = Date.now();
     if (now - lastTapRef.current < 300) {
-      if (!hasUserReacted("love")) {
-        handleReaction("love");
-      }
+      if (!hasUserReacted("love")) handleReaction("love");
       setShowHeartAnimation(true);
       setTimeout(() => setShowHeartAnimation(false), 800);
     }
     lastTapRef.current = now;
   };
 
+  const handleEllieMeme = () => {
+    haptics.medium();
+    setMemeState("generating");
+    setTimeout(() => {
+      setMemeState("done");
+      toast.success("Ellie cooked up a meme! 🔥");
+      setTimeout(() => setMemeState("idle"), 4000);
+    }, 2500);
+  };
+
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-    
     if (seconds < 60) return "just now";
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
@@ -251,9 +218,7 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
               <span className="text-sm md:text-base font-semibold">{post.profiles.username}</span>
               <UserBadge badges={badges} size="sm" />
             </div>
-            <div className="text-xs text-muted-foreground">
-              {formatTimeAgo(post.created_at)}
-            </div>
+            <div className="text-xs text-muted-foreground">{formatTimeAgo(post.created_at)}</div>
           </div>
         </div>
         
@@ -265,19 +230,11 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => {
-                setEditCaption(post.caption || "");
-                setShowEditDialog(true);
-              }}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit caption
+              <DropdownMenuItem onClick={() => { setEditCaption(post.caption || ""); setShowEditDialog(true); }}>
+                <Pencil className="h-4 w-4 mr-2" />Edit caption
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete post
+              <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />Delete post
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -286,32 +243,28 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
 
       {/* Media */}
       <div className="relative aspect-square bg-muted" onClick={handleDoubleTap}>
-        <img
-          src={post.front_media_url}
-          alt="Post"
-          className="w-full h-full object-cover select-none"
-          loading="lazy"
-          draggable={false}
-          onError={(e) => {
-            e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop";
-          }}
+        <img src={post.front_media_url} alt="Post" className="w-full h-full object-cover select-none" loading="lazy" draggable={false}
+          onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop"; }}
         />
         {post.back_media_url && (
-          <div className="absolute top-2 right-2 md:top-4 md:right-4 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-white/20 shadow-lg">
-            <img
-              src={post.back_media_url}
-              alt="Back camera"
-              className="w-full h-full object-cover"
-              loading="lazy"
-              onError={(e) => {
-                e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&auto=format&fit=crop";
-              }}
+          <div className="absolute top-2 right-2 md:top-4 md:right-4 w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 border-border/20 shadow-lg">
+            <img src={post.back_media_url} alt="Back camera" className="w-full h-full object-cover" loading="lazy"
+              onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=200&auto=format&fit=crop"; }}
             />
           </div>
         )}
         {showHeartAnimation && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <Heart className="w-20 h-20 text-red-500 fill-red-500 animate-ping" />
+            <Heart className="w-20 h-20 text-destructive fill-current animate-ping" />
+          </div>
+        )}
+        {/* Meme overlay */}
+        {memeState === "done" && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none animate-fade-in">
+            <div className="bg-black/70 backdrop-blur-sm rounded-2xl p-4 mx-8 text-center">
+              <p className="text-primary-foreground text-lg font-bold mb-1">🔥 Ellie's Meme</p>
+              <p className="text-muted-foreground text-sm italic">"When {post.profiles.username} said '{(post.caption || 'vibes').slice(0, 30)}...' I felt that"</p>
+            </div>
           </div>
         )}
       </div>
@@ -319,40 +272,33 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
       {/* Actions */}
       <div className="p-3 md:p-4 space-y-2 md:space-y-3">
         <div className="flex items-center gap-1 md:gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={reacting}
-            onClick={() => handleReaction("love")}
-            className={`gap-1 h-10 md:h-9 ${hasUserReacted("love") ? "text-red-500" : ""}`}
-          >
+          <Button variant="ghost" size="sm" disabled={reacting} onClick={() => handleReaction("love")}
+            className={`gap-1 h-10 md:h-9 ${hasUserReacted("love") ? "text-destructive" : ""}`}>
             <Heart className={`w-4 h-4 md:w-5 md:h-5 ${hasUserReacted("love") ? "fill-current" : ""}`} />
-            {getReactionCount("love") > 0 && (
-              <span className="text-xs">{getReactionCount("love")}</span>
-            )}
+            {getReactionCount("love") > 0 && <span className="text-xs">{getReactionCount("love")}</span>}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={reacting}
-            onClick={() => handleReaction("eyes")}
-            className={`gap-1 h-10 md:h-9 ${hasUserReacted("eyes") ? "text-primary" : ""}`}
-          >
+          <Button variant="ghost" size="sm" disabled={reacting} onClick={() => handleReaction("eyes")}
+            className={`gap-1 h-10 md:h-9 ${hasUserReacted("eyes") ? "text-primary" : ""}`}>
             <Eye className="w-4 h-4 md:w-5 md:h-5" />
-            {getReactionCount("eyes") > 0 && (
-              <span className="text-xs">{getReactionCount("eyes")}</span>
-            )}
+            {getReactionCount("eyes") > 0 && <span className="text-xs">{getReactionCount("eyes")}</span>}
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setShowComments(!showComments)} className="gap-1 h-10 md:h-9">
+            <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
+            {commentCount > 0 && <span className="text-xs">{commentCount}</span>}
+          </Button>
+          
+          {/* Ellie Meme Button */}
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowComments(!showComments)}
-            className="gap-1 h-10 md:h-9"
+            onClick={handleEllieMeme}
+            disabled={memeState === "generating"}
+            className="gap-1 h-10 md:h-9 ml-auto text-primary hover:text-primary"
           >
-            <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
-            {commentCount > 0 && (
-              <span className="text-xs">{commentCount}</span>
-            )}
+            <Sparkles className={`w-4 h-4 md:w-5 md:h-5 ${memeState === "generating" ? "animate-spin" : ""}`} />
+            <span className="text-xs hidden sm:inline">
+              {memeState === "generating" ? "Cooking..." : "Meme"}
+            </span>
           </Button>
         </div>
 
@@ -363,69 +309,44 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
           </p>
         )}
 
-        {/* Comment preview when collapsed */}
         {!showComments && commentCount > 0 && (
-          <button
-            onClick={() => setShowComments(true)}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left"
-          >
+          <button onClick={() => setShowComments(true)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left">
             View {commentCount} comment{commentCount > 1 ? "s" : ""}
           </button>
         )}
 
-        {/* Comments Section */}
         <Collapsible open={showComments} onOpenChange={setShowComments}>
           <CollapsibleContent className="mt-3 pt-3 border-t border-border/30">
-            <CommentSection 
-              postId={post.id} 
-              postUserId={post.user_id}
-              onCommentAdded={loadCommentCount}
-            />
+            <CommentSection postId={post.id} postUserId={post.user_id} onCommentAdded={loadCommentCount} />
           </CollapsibleContent>
         </Collapsible>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete post?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your post.
-            </AlertDialogDescription>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete} 
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Caption Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit caption</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            value={editCaption}
-            onChange={(e) => setEditCaption(e.target.value)}
-            placeholder="Write a caption..."
-            className="min-h-[100px]"
-          />
+          <DialogHeader><DialogTitle>Edit caption</DialogTitle></DialogHeader>
+          <Textarea value={editCaption} onChange={(e) => setEditCaption(e.target.value)}
+            placeholder="Write a caption..." className="min-h-[100px]" />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)} disabled={isSaving}>Cancel</Button>
+            <Button onClick={handleSaveEdit} disabled={isSaving}>{isSaving ? "Saving..." : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -21,6 +21,7 @@ type EllieState = "idle" | "listening" | "cooking" | "responding" | "recording" 
 interface EllieChatProps {
   onClose: () => void;
   onStateChange: (state: EllieState) => void;
+  embedded?: boolean;
 }
 
 const moodConfig: Record<EllieMood, { label: string; emoji: string; color: string }> = {
@@ -42,7 +43,7 @@ const quickPrompts = [
   { icon: Globe, label: "Research", prompt: "Help me research " },
 ];
 
-const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
+const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -405,7 +406,7 @@ const EllieChat = ({ onClose, onStateChange }: EllieChatProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className={embedded ? "flex flex-col h-full" : "fixed inset-0 z-50 bg-background flex flex-col"}>
       {/* Header */}
       <header className="safe-area-top px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-xl">
         <div className="flex items-center gap-3">
