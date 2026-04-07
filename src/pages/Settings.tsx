@@ -7,7 +7,11 @@ const Settings = () => {
   const navigate = useNavigate();
 
   const handleUpgradeToPremium = () => {
-    window.open("https://regulargram.lemonsqueezy.com/buy/bf74052a-6a77-479a-a893-52ec2fe2fd04", "_blank");
+    const url = "https://regulargram.lemonsqueezy.com/buy/bf74052a-6a77-479a-a893-52ec2fe2fd04";
+    const newWindow = window.open(url, "_blank");
+    if (!newWindow || newWindow.closed) {
+      window.location.href = url;
+    }
   };
 
   return (
