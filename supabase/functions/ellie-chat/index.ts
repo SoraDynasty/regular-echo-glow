@@ -69,7 +69,13 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { messages, mood = "default", stream = false } = body;
+    const { messages: rawMessages, mood = "default", stream = false } = body;
+    
+    // Strip images/base64 data from message history to avoid sending huge payloads
+    const messages = rawMessages.map((msg: any) => ({
+      role: msg.role,
+      content: msg.content || '',
+    }));
     const authHeader = req.headers.get('Authorization');
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
