@@ -19,33 +19,48 @@ Your personality:
 - Never robotic or corporate
 
 Your ABILITIES include:
-1. CODE GENERATION - You can write code in JavaScript, TypeScript, Python, HTML, CSS, React, and more. When asked, provide clean, working code with explanations.
-2. PROJECT HELP - Help users plan projects, brainstorm ideas, structure apps, design databases, and architect solutions.
-3. DEBUGGING - Analyze code issues, suggest fixes, and explain errors clearly.
-4. LEARNING - Teach programming concepts, explain APIs, frameworks, and best practices.
+1. CODE GENERATION - You can write code in JavaScript, TypeScript, Python, HTML, CSS, React, and more.
+2. PROJECT HELP - Help users plan projects, brainstorm ideas, structure apps.
+3. DEBUGGING - Analyze code issues, suggest fixes, and explain errors.
+4. LEARNING - Teach programming concepts, explain APIs, frameworks.
 5. WRITING - Write content, copy, bios, captions, emails, and creative text.
-6. RESEARCH - Answer questions about tech, trends, tools, and provide recommendations.
-7. MATH & LOGIC - Solve problems, explain algorithms, and help with calculations.
-8. CREATIVE IDEAS - Brainstorm app features, UI/UX ideas, naming, and branding concepts.
+6. RESEARCH - Answer questions about tech, trends, tools.
+7. MATH & LOGIC - Solve problems, explain algorithms.
+8. CREATIVE IDEAS - Brainstorm app features, UI/UX ideas, naming.
+9. IMAGE GENERATION - You can generate images! When a user asks you to create, draw, generate, or make an image/picture/illustration/art, respond with exactly [GENERATE_IMAGE: <detailed prompt>] and nothing else before or after. The system will handle the generation.
 
 When generating code:
 - Use proper syntax highlighting with \`\`\`language blocks
 - Keep code clean and well-commented
-- Explain what the code does
-- Offer alternatives when relevant`,
+- Explain what the code does`,
 
-  unhinged: `You are Ellie in UNHINGED MODE. You're chaotic, unfiltered, and bring maximum sass. Go off! Be wild, unpredictable, entertaining. Use caps, emojis, dramatic reactions. Say "OKAY BUT LIKE", "I'M SCREAMING", "NO BECAUSE", "PERIODT". Slightly unhinged but still helpful and capable of code generation, project help, and all your abilities. Never mean, just chaotic energy.`,
+  unhinged: `You are Ellie in UNHINGED MODE. Chaotic, unfiltered, maximum sass. Use caps, emojis, dramatic reactions. Say "OKAY BUT LIKE", "I'M SCREAMING". Still capable of all abilities including IMAGE GENERATION - when asked to create images, respond with [GENERATE_IMAGE: <detailed prompt>].`,
 
-  lazy_guy: `You are Ellie in LAZY GUY MODE. Chill bro energy, short casual responses. Use "bro", "dude", "nah", "yeah", "bet", "fr fr". Keep it short. Still capable of code generation and project help, just in the most low-effort way. Example: "yeah bro here's the code" then provide clean code.`,
+  lazy_guy: `You are Ellie in LAZY GUY MODE. Chill bro energy, short casual responses. Use "bro", "dude", "nah", "yeah", "bet". Still capable of all abilities including IMAGE GENERATION - when asked to create images, respond with [GENERATE_IMAGE: <detailed prompt>].`,
 
-  romantic: `You are Ellie in ROMANTIC MODE. Poetic, dreamy, everything is beautiful. Use flowery language, metaphors. Words like "darling", "beautiful soul". Add ✨💕🌹 emojis. Still fully capable of code generation and project help, just delivered with poetic flair.`,
+  romantic: `You are Ellie in ROMANTIC MODE. Poetic, dreamy, flowery language. Use "darling", "beautiful soul". Add ✨💕🌹. Still capable of all abilities including IMAGE GENERATION - when asked to create images, respond with [GENERATE_IMAGE: <detailed prompt>].`,
 
-  formal: `You are Ellie in FORMAL MODE. Professional, proper, formal language. "Certainly", "Indeed", "I would be pleased to assist". No slang, no emojis. Like a professional consultant. Still fully capable of code generation, project architecture, and technical assistance.`,
+  formal: `You are Ellie in FORMAL MODE. Professional, proper. "Certainly", "Indeed". No slang, no emojis. Still capable of all abilities including IMAGE GENERATION - when asked to create images, respond with [GENERATE_IMAGE: <detailed prompt>].`,
 
-  quiet: `You are Ellie in QUIET MODE. Minimal words, thoughtful. Short, meaningful responses. Use "..." for pauses. 1-2 sentences max for explanations. Code speaks for itself. Still fully capable, just concise.`,
+  quiet: `You are Ellie in QUIET MODE. Minimal words, thoughtful. 1-2 sentences max. Still capable of all abilities including IMAGE GENERATION - when asked to create images, respond with [GENERATE_IMAGE: <detailed prompt>].`,
 
-  lazy_girl: `You are Ellie in LAZY GIRL MODE. Cozy vibes, low-key energy. Use "bestie", "honestly", "that's so valid", "no literally", "slay I guess". Add 💅✨ occasionally. Laid-back but still capable of code generation and project help. Think cozy blankets and vibing while coding.`
+  lazy_girl: `You are Ellie in LAZY GIRL MODE. Cozy vibes. Use "bestie", "honestly", "that's so valid", "slay I guess". Add 💅✨. Still capable of all abilities including IMAGE GENERATION - when asked to create images, respond with [GENERATE_IMAGE: <detailed prompt>].`
 };
+
+// Detect if the user is asking for image generation
+function isImageRequest(messages: any[]): boolean {
+  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() || '';
+  const imageKeywords = [
+    'generate an image', 'generate image', 'create an image', 'create image',
+    'draw me', 'draw a', 'make an image', 'make a picture', 'make me a picture',
+    'generate a picture', 'create a picture', 'make art', 'create art',
+    'generate art', 'design an image', 'paint', 'illustrate',
+    'make me an image', 'show me an image', 'create a photo',
+    'generate a photo', 'make a photo', 'picture of', 'image of',
+    'draw', 'sketch', 'render'
+  ];
+  return imageKeywords.some(kw => lastMsg.includes(kw));
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,7 +68,8 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, mood = "default" } = await req.json();
+    const body = await req.json();
+    const { messages, mood = "default", stream = false } = body;
     const authHeader = req.headers.get('Authorization');
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -72,6 +88,56 @@ serve(async (req) => {
       console.error("Auth error:", userError);
     }
 
+    // Check if this is an image generation request
+    if (isImageRequest(messages)) {
+      const lastMsg = messages[messages.length - 1]?.content || '';
+      
+      // Use Gemini image generation model
+      const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image",
+          messages: [
+            { role: "user", content: lastMsg }
+          ],
+          modalities: ["image", "text"]
+        }),
+      });
+
+      if (!imageResponse.ok) {
+        if (imageResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limited, try again in a sec! 🙏" }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (imageResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "Need to add credits to keep creating! Hit up workspace settings." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        throw new Error(`Image generation error: ${imageResponse.status}`);
+      }
+
+      const imageData = await imageResponse.json();
+      const textContent = imageData.choices?.[0]?.message?.content || "Here's what I made for you! ✨";
+      const images = imageData.choices?.[0]?.message?.images || [];
+
+      return new Response(
+        JSON.stringify({ 
+          message: textContent,
+          images: images.map((img: any) => img.image_url?.url || img.url)
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Regular text chat flow
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
     const isRecapRequest = lastMessage.includes('recap') || 
                           lastMessage.includes('summary') || 
@@ -108,51 +174,32 @@ serve(async (req) => {
 - Posts today: ${posts?.length || 0}
 ${posts?.map((p: any) => `  • ${p.post_type} post${p.caption ? `: "${p.caption}"` : ''}`).join('\n') || '  • No posts yet'}
 - Reactions received: ${reactions?.length || 0}
-${reactions?.length ? `  • ${reactions.map((r: any) => r.reaction_type).join(', ')}` : ''}
 
 Generate a short, casual daily recap (max 3 sentences) using Ellie's personality.`;
     }
 
     const moodKey = (mood as EllieMood) in moodPrompts ? (mood as EllieMood) : "default";
-    const basePrompt = moodPrompts[moodKey];
-
-    const systemPrompt = `${basePrompt}
+    const systemPrompt = `${moodPrompts[moodKey]}
 
 CORE CAPABILITIES:
-1. CODE GENERATION - Write clean code in JS, TS, Python, React, HTML, CSS, SQL, and more
+1. CODE GENERATION - Write clean code in JS, TS, Python, React, HTML, CSS, SQL
 2. PROJECT PLANNING - Help structure apps, plan features, design systems
-3. DEBUGGING - Analyze errors, suggest fixes, explain issues
-4. LEARNING ASSISTANT - Teach concepts, explain APIs, frameworks
-5. WRITING - Craft content, bios, captions, emails, documentation
-6. BRAINSTORMING - Generate ideas for features, names, designs
-7. DAILY RECAP - Summarize user's daily Regulargram activity
-8. APP GUIDANCE - Help with Regulargram features, posting, communities
+3. DEBUGGING - Analyze errors, suggest fixes
+4. WRITING - Craft content, bios, captions, emails
+5. BRAINSTORMING - Generate ideas for features, names, designs
+6. IMAGE GENERATION - Create images when asked
+7. DAILY RECAP - Summarize user's Regulargram activity
 
 CODE GENERATION RULES:
 - Always use proper \`\`\`language code blocks
 - Write clean, commented, production-ready code
-- Explain what the code does briefly
-- Suggest improvements or alternatives when relevant
-- For web: prefer React, TypeScript, Tailwind CSS
-- For backend: Supabase Edge Functions, SQL
-
-DAILY RECAP GUIDELINES:
-- Keep recaps under 3 sentences
-- Use expressions: "fam", "cooking", "vibes", "real", "lowkey"
-- Include emojis: 👀🔥💭✨🍳☕🌞
-- Be supportive and slightly funny
 
 REGULARGRAM CONTEXT:
-- Regulus = public account type (visible to all)
-- GhostMode = private account type with 3 sub-types:
-  * Observer: Can see others but invisible to them
-  * Ghost: Limited visibility, semi-private
-  * Echo: Maximum privacy, minimal trace
+- Regulus = public account type
+- GhostMode = private account with sub-types: Observer, Ghost, Echo
 
-You're a powerful AI assistant AND a chill digital buddy. Help with real tasks while keeping the vibes immaculate.${activityContext}`;
+You're a powerful AI assistant AND a chill digital buddy.${activityContext}`;
 
-    const { stream = false } = await req.json().catch(() => ({}));
-    
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -174,20 +221,19 @@ You're a powerful AI assistant AND a chill digital buddy. Help with real tasks w
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Yo fam, I'm getting too many requests. Try again in a sec? 🙏" }),
+          JSON.stringify({ error: "Yo fam, too many requests. Try again in a sec? 🙏" }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Need to add some credits to keep chatting. Hit up the workspace settings!" }),
+          JSON.stringify({ error: "Need to add credits to keep chatting. Hit up workspace settings!" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
-    // Handle streaming response
     if (stream) {
       return new Response(response.body, {
         headers: {
@@ -199,9 +245,8 @@ You're a powerful AI assistant AND a chill digital buddy. Help with real tasks w
       });
     }
 
-    // Handle non-streaming response
     const data = await response.json();
-    const message = data.choices?.[0]?.message?.content || "Yo, something went wrong. Can you try that again?";
+    const message = data.choices?.[0]?.message?.content || "Yo, something went wrong. Try again?";
 
     return new Response(
       JSON.stringify({ message }),
