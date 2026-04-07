@@ -12,6 +12,7 @@ import ConversationHistory from "./ConversationHistory";
 type Message = {
   role: "user" | "assistant";
   content: string;
+  images?: string[];
 };
 
 export type EllieMood = "default" | "unhinged" | "lazy_guy" | "romantic" | "formal" | "quiet" | "lazy_girl";
