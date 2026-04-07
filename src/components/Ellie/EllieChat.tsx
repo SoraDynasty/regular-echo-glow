@@ -12,6 +12,7 @@ import ConversationHistory from "./ConversationHistory";
 type Message = {
   role: "user" | "assistant";
   content: string;
+  images?: string[];
 };
 
 export type EllieMood = "default" | "unhinged" | "lazy_guy" | "romantic" | "formal" | "quiet" | "lazy_girl";
@@ -38,7 +39,7 @@ const quickPrompts = [
   { icon: Code, label: "Write code", prompt: "Help me write code for " },
   { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas for " },
   { icon: FileText, label: "Write content", prompt: "Help me write " },
-  { icon: Palette, label: "Design ideas", prompt: "Give me design ideas for " },
+  { icon: Palette, label: "Generate image", prompt: "Generate an image of " },
   { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
   { icon: Globe, label: "Research", prompt: "Help me research " },
 ];
@@ -188,6 +189,20 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
     haptics.light();
   };
 
+  const isImageRequest = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    const keywords = [
+      'generate an image', 'generate image', 'create an image', 'create image',
+      'draw me', 'draw a', 'make an image', 'make a picture', 'make me a picture',
+      'generate a picture', 'create a picture', 'make art', 'create art',
+      'generate art', 'design an image', 'paint', 'illustrate',
+      'make me an image', 'show me an image', 'create a photo',
+      'generate a photo', 'make a photo', 'picture of', 'image of',
+      'draw', 'sketch', 'render'
+    ];
+    return keywords.some(kw => lower.includes(kw));
+  };
+
   const sendMessage = async (messageText?: string) => {
     const userMessage = messageText || input.trim();
     if (!userMessage || isLoading) return;
@@ -196,85 +211,127 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
     const newMessages = [...messages, { role: "user" as const, content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
-    setIsStreaming(true);
     onStateChange("cooking");
 
-    // Create abort controller for this request
     abortControllerRef.current = new AbortController();
 
     try {
-      // Add placeholder for streaming response
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ellie-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            messages: newMessages,
-            mood,
-            stream: true
-          }),
-          signal: abortControllerRef.current.signal,
+      // Check if this is an image generation request
+      if (isImageRequest(userMessage)) {
+        setMessages(prev => [...prev, { role: "assistant", content: "🎨 Generating your image..." }]);
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ellie-chat`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              messages: newMessages,
+              mood,
+              stream: false
+            }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP error ${response.status}`);
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        const data = await response.json();
+        const images = data.images?.filter(Boolean) || [];
+        
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: data.message || "Here's what I made for you! ✨",
+            images
+          };
+          return updated;
+        });
 
-      onStateChange("responding");
-      
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullMessage = "";
+        onStateChange("idle");
+        haptics.success();
+      } else {
+        // Regular streaming text chat
+        setIsStreaming(true);
+        setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+        
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ellie-chat`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              messages: newMessages,
+              mood,
+              stream: true
+            }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
 
-      if (reader) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
+        onStateChange("responding");
+        
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullMessage = "";
 
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") continue;
+        if (reader) {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
 
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices?.[0]?.delta?.content || "";
-                  if (content) {
-                    fullMessage += content;
-                    setMessages(prev => {
-                      const updated = [...prev];
-                      updated[updated.length - 1] = { role: "assistant", content: fullMessage };
-                      return updated;
-                    });
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split("\n");
+
+              for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                  const data = line.slice(6);
+                  if (data === "[DONE]") continue;
+
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content || "";
+                    if (content) {
+                      fullMessage += content;
+                      setMessages(prev => {
+                        const updated = [...prev];
+                        updated[updated.length - 1] = { role: "assistant", content: fullMessage };
+                        return updated;
+                      });
+                    }
+                  } catch {
+                    // Skip invalid JSON chunks
                   }
-                } catch {
-                  // Skip invalid JSON chunks
                 }
               }
             }
-          }
-        } catch (readError) {
-          if (readError instanceof Error && readError.name === 'AbortError') {
-            console.log("Stream aborted by user");
-          } else {
-            throw readError;
+          } catch (readError) {
+            if (readError instanceof Error && readError.name === 'AbortError') {
+              console.log("Stream aborted by user");
+            } else {
+              throw readError;
+            }
           }
         }
-      }
 
-      if (fullMessage && !abortControllerRef.current?.signal.aborted) {
-        await generateSpeech(fullMessage);
+        if (fullMessage && !abortControllerRef.current?.signal.aborted) {
+          await generateSpeech(fullMessage);
+        }
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
@@ -282,9 +339,8 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
         toast.success("Generation stopped");
       } else {
         console.error("Ellie chat error:", error);
-        toast.error("Something went wrong. Try again?");
-        // Remove empty assistant message on error
-        setMessages(prev => prev.filter(m => m.content !== ""));
+        toast.error(error instanceof Error ? error.message : "Something went wrong. Try again?");
+        setMessages(prev => prev.filter(m => m.content !== "" && m.content !== "🎨 Generating your image..."));
       }
     } finally {
       setIsLoading(false);
@@ -526,6 +582,19 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
                       <div className="text-sm leading-relaxed">
                         {msg.role === "assistant" ? renderMessageContent(msg.content) : msg.content}
                       </div>
+                      {msg.images && msg.images.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {msg.images.map((imgUrl, imgIdx) => (
+                            <img
+                              key={imgIdx}
+                              src={imgUrl}
+                              alt="Generated by Ellie"
+                              className="rounded-xl max-w-full w-full object-contain border border-border/30"
+                              loading="lazy"
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
