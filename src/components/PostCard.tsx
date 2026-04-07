@@ -185,10 +185,10 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
   const handleEllieMeme = () => {
     haptics.medium();
     setMemeState("generating");
-    setTimeout(() => {
+      setTimeout(() => {
       setMemeState("done");
       toast.success("Ellie cooked up a meme! 🔥");
-      setTimeout(() => setMemeState("idle"), 4000);
+      setTimeout(() => setMemeState("idle"), 10000);
     }, 2500);
   };
 
@@ -260,10 +260,11 @@ const PostCard = ({ post, onReaction, onPostDeleted, onPostUpdated }: PostCardPr
         )}
         {/* Meme overlay */}
         {memeState === "done" && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none animate-fade-in">
-            <div className="bg-black/70 backdrop-blur-sm rounded-2xl p-4 mx-8 text-center">
-              <p className="text-primary-foreground text-lg font-bold mb-1">🔥 Ellie's Meme</p>
-              <p className="text-muted-foreground text-sm italic">"When {post.profiles.username} said '{(post.caption || 'vibes').slice(0, 30)}...' I felt that"</p>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none animate-bounce-in">
+            <div className="bg-black/80 backdrop-blur-md rounded-3xl p-6 mx-6 text-center border border-primary/40 shadow-[0_0_40px_rgba(var(--primary),0.3)]">
+              <p className="text-white text-2xl font-black mb-2 drop-shadow-lg">🔥 Ellie's Meme 🔥</p>
+              <p className="text-white/80 text-base italic leading-relaxed">"When {post.profiles.username} said '{(post.caption || 'vibes').slice(0, 30)}...' I felt that"</p>
+              <div className="mt-3 text-xs text-primary font-semibold tracking-wider uppercase">powered by ellie ai</div>
             </div>
           </div>
         )}
