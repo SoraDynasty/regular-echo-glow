@@ -245,11 +245,7 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
               "Content-Type": "application/json",
               "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             },
-            body: JSON.stringify({
-              messages: newMessages,
-              mood,
-              stream: false
-            }),
+            body: JSON.stringify({ messages: newMessages, mood, stream: false }),
             signal: abortControllerRef.current.signal,
           }
         );
@@ -268,6 +264,42 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
             role: "assistant",
             content: data.message || "Here's what I made for you! ✨",
             images
+          };
+          return updated;
+        });
+
+        onStateChange("idle");
+        haptics.success();
+      } else if (isMusicRequest(userMessage)) {
+        // Music generation request
+        setMessages(prev => [...prev, { role: "assistant", content: "🎵 Composing your track... this may take a moment ✨" }]);
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ellie-chat`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ messages: newMessages, mood, stream: false }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP error ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: data.message || "🎵 Here's your track!",
+            audio: data.audio
           };
           return updated;
         });
