@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2, History } from "lucide-react";
+import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2, History, Music, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,6 +13,7 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   images?: string[];
+  audio?: string;
 };
 
 export type EllieMood = "default" | "unhinged" | "lazy_guy" | "romantic" | "formal" | "quiet" | "lazy_girl";
@@ -40,6 +41,7 @@ const quickPrompts = [
   { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas for " },
   { icon: FileText, label: "Write content", prompt: "Help me write " },
   { icon: Palette, label: "Generate image", prompt: "Generate an image of " },
+  { icon: Music, label: "Generate music", prompt: "Generate music: " },
   { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
   { icon: Globe, label: "Research", prompt: "Help me research " },
 ];
