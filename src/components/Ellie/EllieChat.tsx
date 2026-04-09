@@ -644,6 +644,25 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
                           ))}
                         </div>
                       )}
+                      {msg.audio && (
+                        <div className="mt-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Music className="w-4 h-4 text-primary" />
+                            <span className="text-xs font-medium text-muted-foreground">Generated Track</span>
+                          </div>
+                          <audio controls className="w-full rounded-lg" preload="metadata">
+                            <source src={msg.audio} type="audio/mpeg" />
+                            Your browser does not support audio playback.
+                          </audio>
+                          <a
+                            href={msg.audio}
+                            download="ellie-track.mp3"
+                            className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                          >
+                            ⬇️ Download track
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
