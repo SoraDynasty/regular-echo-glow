@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, X, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2, History } from "lucide-react";
+import { Send, Mic, Square, Volume2, Sparkles, ArrowLeft, Code, Lightbulb, FileText, Palette, Calculator, Globe, Trash2, History, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,6 +13,7 @@ type Message = {
   role: "user" | "assistant";
   content: string;
   images?: string[];
+  audio?: string;
 };
 
 export type EllieMood = "default" | "unhinged" | "lazy_guy" | "romantic" | "formal" | "quiet" | "lazy_girl";
@@ -40,6 +41,7 @@ const quickPrompts = [
   { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas for " },
   { icon: FileText, label: "Write content", prompt: "Help me write " },
   { icon: Palette, label: "Generate image", prompt: "Generate an image of " },
+  { icon: Music, label: "Generate music", prompt: "Generate music: " },
   { icon: Calculator, label: "Solve problem", prompt: "Help me solve this problem: " },
   { icon: Globe, label: "Research", prompt: "Help me research " },
 ];
@@ -203,6 +205,21 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
     return keywords.some(kw => lower.includes(kw));
   };
 
+  const isMusicRequest = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    const keywords = [
+      'generate music', 'generate a song', 'generate a track', 'generate a beat',
+      'create music', 'create a song', 'create a track', 'create a beat',
+      'make music', 'make a song', 'make a track', 'make a beat',
+      'compose', 'compose a song', 'compose music',
+      'produce a beat', 'produce music',
+      'make me a song', 'make me music', 'make me a beat',
+      'song about', 'beat for', 'track about',
+      'lo-fi', 'lofi beat', 'hip hop beat', 'edm track'
+    ];
+    return keywords.some(kw => lower.includes(kw));
+  };
+
   const sendMessage = async (messageText?: string) => {
     const userMessage = messageText || input.trim();
     if (!userMessage || isLoading) return;
@@ -228,11 +245,7 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
               "Content-Type": "application/json",
               "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             },
-            body: JSON.stringify({
-              messages: newMessages,
-              mood,
-              stream: false
-            }),
+            body: JSON.stringify({ messages: newMessages, mood, stream: false }),
             signal: abortControllerRef.current.signal,
           }
         );
@@ -251,6 +264,42 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
             role: "assistant",
             content: data.message || "Here's what I made for you! ✨",
             images
+          };
+          return updated;
+        });
+
+        onStateChange("idle");
+        haptics.success();
+      } else if (isMusicRequest(userMessage)) {
+        // Music generation request
+        setMessages(prev => [...prev, { role: "assistant", content: "🎵 Composing your track... this may take a moment ✨" }]);
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ellie-chat`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ messages: newMessages, mood, stream: false }),
+            signal: abortControllerRef.current.signal,
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP error ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: data.message || "🎵 Here's your track!",
+            audio: data.audio
           };
           return updated;
         });
@@ -340,7 +389,7 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
       } else {
         console.error("Ellie chat error:", error);
         toast.error(error instanceof Error ? error.message : "Something went wrong. Try again?");
-        setMessages(prev => prev.filter(m => m.content !== "" && m.content !== "🎨 Generating your image..."));
+        setMessages(prev => prev.filter(m => m.content !== "" && m.content !== "🎨 Generating your image..." && m.content !== "🎵 Composing your track... this may take a moment ✨"));
       }
     } finally {
       setIsLoading(false);
@@ -593,6 +642,25 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
                               loading="lazy"
                             />
                           ))}
+                        </div>
+                      )}
+                      {msg.audio && (
+                        <div className="mt-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Music className="w-4 h-4 text-primary" />
+                            <span className="text-xs font-medium text-muted-foreground">Generated Track</span>
+                          </div>
+                          <audio controls className="w-full rounded-lg" preload="metadata">
+                            <source src={msg.audio} type="audio/mpeg" />
+                            Your browser does not support audio playback.
+                          </audio>
+                          <a
+                            href={msg.audio}
+                            download="ellie-track.mp3"
+                            className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                          >
+                            ⬇️ Download track
+                          </a>
                         </div>
                       )}
                     </div>
