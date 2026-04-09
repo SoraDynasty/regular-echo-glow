@@ -160,6 +160,57 @@ serve(async (req) => {
       );
     }
 
+    // Check if this is a music generation request
+    if (isMusicRequest(messages)) {
+      const lastMsg = messages[messages.length - 1]?.content || '';
+      const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+      
+      if (!ELEVENLABS_API_KEY) {
+        return new Response(
+          JSON.stringify({ message: "Music generation isn't set up yet — missing API key. 🎵" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log("Music request detected:", lastMsg);
+
+      const musicResponse = await fetch("https://api.elevenlabs.io/v1/music", {
+        method: "POST",
+        headers: {
+          "xi-api-key": ELEVENLABS_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: lastMsg,
+          duration_seconds: 30,
+        }),
+      });
+
+      if (!musicResponse.ok) {
+        const errText = await musicResponse.text();
+        console.error(`ElevenLabs Music error [${musicResponse.status}]:`, errText);
+        if (musicResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limited on music gen, try again in a sec! 🎵" }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        throw new Error(`Music generation failed: ${musicResponse.status}`);
+      }
+
+      const audioBuffer = await musicResponse.arrayBuffer();
+      const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+      const base64Audio = base64Encode(audioBuffer);
+
+      return new Response(
+        JSON.stringify({
+          message: "🎵 Here's your track! Hit play and vibe out ✨",
+          audio: `data:audio/mpeg;base64,${base64Audio}`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Regular text chat flow
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
     const isRecapRequest = lastMessage.includes('recap') || 
@@ -211,7 +262,12 @@ CORE CAPABILITIES:
 4. WRITING - Craft content, bios, captions, emails
 5. BRAINSTORMING - Generate ideas for features, names, designs
 6. IMAGE GENERATION - Create images when asked
-7. DAILY RECAP - Summarize user's Regulargram activity
+7. MUSIC GENERATION - Create original music tracks when asked
+8. DAILY RECAP - Summarize user's Regulargram activity
+
+VIDEO GENERATION:
+- Video generation is NOT available yet. If a user asks to generate a video, explain honestly that video generation isn't supported currently. Suggest alternatives like generating an image, creating a storyboard description, or writing a script instead.
+
 
 CODE GENERATION RULES:
 - Always use proper \`\`\`language code blocks
