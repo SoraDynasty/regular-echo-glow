@@ -205,6 +205,21 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
     return keywords.some(kw => lower.includes(kw));
   };
 
+  const isMusicRequest = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    const keywords = [
+      'generate music', 'generate a song', 'generate a track', 'generate a beat',
+      'create music', 'create a song', 'create a track', 'create a beat',
+      'make music', 'make a song', 'make a track', 'make a beat',
+      'compose', 'compose a song', 'compose music',
+      'produce a beat', 'produce music',
+      'make me a song', 'make me music', 'make me a beat',
+      'song about', 'beat for', 'track about',
+      'lo-fi', 'lofi beat', 'hip hop beat', 'edm track'
+    ];
+    return keywords.some(kw => lower.includes(kw));
+  };
+
   const sendMessage = async (messageText?: string) => {
     const userMessage = messageText || input.trim();
     if (!userMessage || isLoading) return;
