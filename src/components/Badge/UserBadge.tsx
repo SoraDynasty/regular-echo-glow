@@ -17,31 +17,31 @@ const badgeConfig = {
     icon: Ghost,
     label: "Ghost",
     tagline: "You were here before the noise.",
-    className: "bg-white/10 text-white border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] animate-pulse",
+    className: "bg-white/10 text-white border-white/20",
   },
   observer: {
     icon: Eye,
     label: "Observer",
     tagline: "Seeing everything, saying nothing.",
-    className: "bg-slate-200/20 text-slate-300 border-slate-300/40 shadow-[0_0_20px_rgba(203,213,225,0.3)] hover:shadow-[0_0_30px_rgba(203,213,225,0.5)]",
+    className: "bg-slate-200/10 text-slate-300 border-slate-300/20",
   },
   echo: {
     icon: Radio,
     label: "Echo",
     tagline: "You made Regulargram echo.",
-    className: "bg-blue-500/20 text-blue-400 border-blue-400/40 shadow-[0_0_20px_rgba(96,165,250,0.4)] hover:shadow-[0_0_30px_rgba(96,165,250,0.6)] animate-pulse",
+    className: "bg-blue-500/10 text-blue-400 border-blue-400/20",
   },
   regulus: {
     icon: Crown,
     label: "Regulus",
     tagline: "You started the signal.",
-    className: "bg-yellow-500/20 text-yellow-400 border-yellow-400/40 shadow-[0_0_20px_rgba(250,204,21,0.4)] hover:shadow-[0_0_30px_rgba(250,204,21,0.6)] animate-pulse",
+    className: "bg-yellow-500/10 text-yellow-400 border-yellow-400/20",
   },
   founders_circle: {
     icon: Award,
     label: "Founder's Circle",
     tagline: "You were there when it began.",
-    className: "bg-gradient-to-r from-white/10 via-blue-500/20 to-yellow-500/20 text-white border-white/40 shadow-[0_0_25px_rgba(255,255,255,0.4)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] animate-pulse",
+    className: "bg-white/10 text-white border-white/20",
   },
 };
 
