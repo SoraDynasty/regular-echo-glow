@@ -62,6 +62,23 @@ function isImageRequest(messages: any[]): boolean {
   return imageKeywords.some(kw => lastMsg.includes(kw));
 }
 
+// Detect if the user is asking for music generation
+function isMusicRequest(messages: any[]): boolean {
+  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() || '';
+  const musicKeywords = [
+    'generate music', 'generate a song', 'generate a track', 'generate a beat',
+    'create music', 'create a song', 'create a track', 'create a beat',
+    'make music', 'make a song', 'make a track', 'make a beat',
+    'compose', 'compose a song', 'compose music', 'compose a track',
+    'produce a beat', 'produce music', 'produce a track',
+    'make me a song', 'make me music', 'make me a beat',
+    'generate me a song', 'write a song', 'create me a song',
+    'music for', 'song about', 'beat for', 'track about',
+    'lo-fi', 'lofi beat', 'hip hop beat', 'edm track'
+  ];
+  return musicKeywords.some(kw => lastMsg.includes(kw));
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
