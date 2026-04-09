@@ -389,7 +389,7 @@ const EllieChat = ({ onClose, onStateChange, embedded = false }: EllieChatProps)
       } else {
         console.error("Ellie chat error:", error);
         toast.error(error instanceof Error ? error.message : "Something went wrong. Try again?");
-        setMessages(prev => prev.filter(m => m.content !== "" && m.content !== "🎨 Generating your image..."));
+        setMessages(prev => prev.filter(m => m.content !== "" && m.content !== "🎨 Generating your image..." && m.content !== "🎵 Composing your track... this may take a moment ✨"));
       }
     } finally {
       setIsLoading(false);
