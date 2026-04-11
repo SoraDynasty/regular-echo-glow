@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Settings, Sparkles, Ghost as GhostIcon, Crown, X } from "lucide-react";
+import { Settings, Sparkles, Ghost as GhostIcon, X } from "lucide-react";
 import MobileNav from "@/components/MobileNav";
 import ShareProfileQR from "@/components/Profile/ShareProfileQR";
 import LoadingAnimation from "@/components/LoadingAnimation";
@@ -18,7 +18,7 @@ const Profile = () => {
   const [postsCount, setPostsCount] = useState(0);
   const [observingCount, setObservingCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
-  const [subscription, setSubscription] = useState<any>(null);
+  
   const [badges, setBadges] = useState<any[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   useEffect(() => {
@@ -70,14 +70,6 @@ const Profile = () => {
         }).eq("following_id", data.id);
         setFollowersCount(followers || 0);
       }
-
-      // Load subscription status
-      const { data: subData } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", data.id)
-        .single();
-      setSubscription(subData);
 
       // Load badges
       const { data: badgeData } = await supabase
@@ -178,15 +170,6 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Premium Badge */}
-        {subscription?.status === 'active' && (
-          <div className="glass-card p-3 rounded-2xl mb-4 text-center border border-primary/20">
-            <Crown className="w-5 h-5 inline mr-2 text-primary" />
-            <span className="text-sm font-semibold">
-              {subscription.tier === 'ghost_premium' ? 'Ghost Premium' : 'Regulus Premium'}
-            </span>
-          </div>
-        )}
 
 
         {/* Share Profile Button */}

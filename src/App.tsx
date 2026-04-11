@@ -23,7 +23,7 @@ import EditProfile from "./pages/EditProfile";
 import Communities from "./pages/Communities";
 import CommunityDetail from "./pages/CommunityDetail";
 import CommunitySettings from "./pages/CommunitySettings";
-import Subscribe from "./pages/Subscribe";
+
 import Settings from "./pages/Settings";
 import AppearanceSettings from "./pages/AppearanceSettings";
 import PrivacySecuritySettings from "./pages/PrivacySecuritySettings";
@@ -52,7 +52,7 @@ const AnimatedRoutes = () => {
         <Route path="/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
         <Route path="/community/:id" element={<ProtectedRoute><CommunityDetail /></ProtectedRoute>} />
         <Route path="/community/:id/settings" element={<ProtectedRoute><CommunitySettings /></ProtectedRoute>} />
-        <Route path="/subscribe" element={<ProtectedRoute><Subscribe /></ProtectedRoute>} />
+        
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/settings/appearance" element={<ProtectedRoute><AppearanceSettings /></ProtectedRoute>} />
         <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySecuritySettings /></ProtectedRoute>} />
