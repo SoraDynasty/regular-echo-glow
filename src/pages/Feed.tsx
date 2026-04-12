@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun, Wallet } from "lucide-react";
+import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 import PostCard from "@/components/PostCard";
 import MobileNav from "@/components/MobileNav";
@@ -12,6 +12,7 @@ import StoriesRow from "@/components/Stories/StoriesRow";
 import { useTheme } from "@/hooks/use-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import { haptics } from "@/lib/haptics";
+import WalletButton from "@/components/Solana/WalletButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./hooks/use-theme";
 import { EllieProvider } from "./contexts/EllieContext";
+import SolanaProvider from "./providers/SolanaProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PageTransition from "./components/PageTransition";
 import EllieFloatingIcon from "./components/Ellie/EllieFloatingIcon";
@@ -66,16 +67,18 @@ const AnimatedRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark">
-      <EllieProvider>
-        <TooltipProvider>
+      <SolanaProvider>
+        <EllieProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
             <AnimatedRoutes />
             <EllieFloatingIcon />
           </BrowserRouter>
-        </TooltipProvider>
-      </EllieProvider>
+          </TooltipProvider>
+        </EllieProvider>
+      </SolanaProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
