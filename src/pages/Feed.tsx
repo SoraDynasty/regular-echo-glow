@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun, Wallet } from "lucide-react";
+import { Camera, User, LogOut, Sparkles, Ghost as GhostIcon, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 import PostCard from "@/components/PostCard";
 import MobileNav from "@/components/MobileNav";
@@ -12,6 +12,7 @@ import StoriesRow from "@/components/Stories/StoriesRow";
 import { useTheme } from "@/hooks/use-theme";
 import { useSwipe } from "@/hooks/use-swipe";
 import { haptics } from "@/lib/haptics";
+import WalletButton from "@/components/Solana/WalletButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Post = Database["public"]["Tables"]["posts"]["Row"] & {
@@ -66,14 +67,6 @@ const Feed = () => {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const handleConnectWallet = () => {
-    haptics.medium();
-    toast("Wallet connection coming soon!", {
-      description: "BNB Smart Chain integration in progress.",
-      icon: "🔗",
-    });
-  };
-
   return (
     <div className="min-h-screen min-h-dvh bg-background" {...swipeHandlers}>
       {/* Header */}
@@ -84,19 +77,7 @@ const Feed = () => {
           
           <div className="flex items-center gap-2 md:gap-3">
             {/* Connect Wallet Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleConnectWallet}
-              className="rounded-full px-3 h-9 text-xs font-medium gap-1.5 transition-all"
-              style={{
-                border: "1px solid hsla(220, 10%, 45%, 0.3)",
-                background: "hsla(240, 10%, 10%, 0.5)",
-              }}
-            >
-              <Wallet className="w-3.5 h-3.5 text-secondary" />
-              <span className="hidden sm:inline text-muted-foreground">Connect</span>
-            </Button>
+            <WalletButton />
 
             {profile?.account_type === "regulus" ? (
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 text-sm">
