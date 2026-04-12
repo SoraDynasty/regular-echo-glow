@@ -67,14 +67,6 @@ const Feed = () => {
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  const handleConnectWallet = () => {
-    haptics.medium();
-    toast("Wallet connection coming soon!", {
-      description: "BNB Smart Chain integration in progress.",
-      icon: "🔗",
-    });
-  };
-
   return (
     <div className="min-h-screen min-h-dvh bg-background" {...swipeHandlers}>
       {/* Header */}
@@ -85,19 +77,7 @@ const Feed = () => {
           
           <div className="flex items-center gap-2 md:gap-3">
             {/* Connect Wallet Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleConnectWallet}
-              className="rounded-full px-3 h-9 text-xs font-medium gap-1.5 transition-all"
-              style={{
-                border: "1px solid hsla(220, 10%, 45%, 0.3)",
-                background: "hsla(240, 10%, 10%, 0.5)",
-              }}
-            >
-              <Wallet className="w-3.5 h-3.5 text-secondary" />
-              <span className="hidden sm:inline text-muted-foreground">Connect</span>
-            </Button>
+            <WalletButton />
 
             {profile?.account_type === "regulus" ? (
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 text-sm">
