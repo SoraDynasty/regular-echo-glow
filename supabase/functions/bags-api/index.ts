@@ -4,7 +4,7 @@ const corsHeaders = {
 };
 
 const BAGS_API_KEY = Deno.env.get('BAGS_API_KEY')!;
-const BAGS_API_BASE = 'https://api.bags.fm';
+const BAGS_API_BASE = 'https://public-api-v2.bags.fm/api/v1';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -36,7 +36,11 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        const resp = await fetch(`${BAGS_API_BASE}/v1/state/token-lifetime-fees?tokenMint=${tokenMint}`, { headers });
+        const resp = await fetch(`${BAGS_API_BASE}/state/token-lifetime-fees?tokenMint=${tokenMint}`, { headers });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Bags API error ${resp.status}: ${text}`);
+        }
         result = await resp.json();
         break;
       }
@@ -48,23 +52,31 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        const resp = await fetch(`${BAGS_API_BASE}/v1/token-launch/swap-instructions`, {
+        const resp = await fetch(`${BAGS_API_BASE}/token-launch/swap-instructions`, {
           method: 'POST',
           headers,
           body: JSON.stringify({
             tokenMint,
             walletAddress,
             action: 'buy',
-            amount: 0.01, // 0.01 SOL
+            amount: 0.01,
             slippage: 5,
           }),
         });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Bags API error ${resp.status}: ${text}`);
+        }
         result = await resp.json();
         break;
       }
 
       case 'getTrending': {
-        const resp = await fetch(`${BAGS_API_BASE}/v1/tokens/trending`, { headers });
+        const resp = await fetch(`${BAGS_API_BASE}/token-launch/feed`, { headers });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Bags API error ${resp.status}: ${text}`);
+        }
         result = await resp.json();
         break;
       }
@@ -76,7 +88,11 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        const resp = await fetch(`${BAGS_API_BASE}/v1/state/token-creators?tokenMint=${tokenMint}`, { headers });
+        const resp = await fetch(`${BAGS_API_BASE}/state/token-creators?tokenMint=${tokenMint}`, { headers });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Bags API error ${resp.status}: ${text}`);
+        }
         result = await resp.json();
         break;
       }
