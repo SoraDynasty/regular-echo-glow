@@ -123,9 +123,13 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-image",
+          model: "google/gemini-3.1-flash-image-preview",
           messages: [
-            { role: "user", content: lastMsg }
+            {
+              role: "system",
+              content: "You are a world-class photorealistic image generator. When the user asks for an image, generate a highly realistic, detailed, photographic-quality image. Default to realism unless the user explicitly asks for a different style (cartoon, anime, painting, etc.). Use natural lighting, accurate textures, sharp focus, real-world proportions, and authentic detail. Avoid plastic-looking skin, over-saturation, or generic stock-photo aesthetics."
+            },
+            { role: "user", content: `Generate a photorealistic, highly detailed image: ${lastMsg}` }
           ],
           modalities: ["image", "text"]
         }),
