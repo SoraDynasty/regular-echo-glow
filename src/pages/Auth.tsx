@@ -93,7 +93,17 @@ const Auth = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("invalid login")) {
+          toast.error("Wrong email or password.");
+        } else if (msg.includes("email not confirmed")) {
+          toast.error("Please confirm your email first.");
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
 
       if (data.session) {
         toast.success("Welcome back!");
