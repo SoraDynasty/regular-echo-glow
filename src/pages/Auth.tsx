@@ -50,11 +50,27 @@ const Auth = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("user already")) {
+          toast.error("That email is already registered. Try signing in instead.");
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
 
-      if (data.user) {
+      if (data.session) {
         toast.success("Account created! Redirecting...");
         navigate("/feed");
+      } else if (data.user) {
+        // Fallback: try signing them in immediately
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          toast.success("Account created! Please sign in.");
+        } else {
+          toast.success("Account created! Redirecting...");
+          navigate("/feed");
+        }
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to sign up");
